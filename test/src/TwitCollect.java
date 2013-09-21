@@ -15,18 +15,14 @@ public final class TwitCollect {
 	public static void main(String[] args) throws TwitterException {
 
 		createDatabase(args[0], args[1]);
-		ConfigurationBuilder cb = new ConfigurationBuilder();
 
-		// Please change your credential
-		cb.setDebugEnabled(true)
-				.setOAuthConsumerKey("")
-				.setOAuthConsumerSecret(
-						"")
-				.setOAuthAccessToken(
-						"")
-				.setOAuthAccessTokenSecret(
-						"");
-		cb.setJSONStoreEnabled(true);
+        ConfigurationBuilder cb = new ConfigurationBuilder();
+     	cb.setDebugEnabled(true)
+     	  .setOAuthConsumerKey("")
+     	  .setOAuthConsumerSecret("")
+     	  .setOAuthAccessToken("-")
+     	  .setOAuthAccessTokenSecret("");
+     	cb.setJSONStoreEnabled(true);
 
 		TwitterStreamFactory tf = new TwitterStreamFactory(cb.build());
 
@@ -36,21 +32,12 @@ public final class TwitCollect {
 			public void onStatus(Status status) {
 				if (status.getGeoLocation() != null) {
 
-					// Adela?????
-					if (status.getGeoLocation().getLatitude() < -34
-							&& status.getGeoLocation().getLatitude() > -35
-							&& status.getGeoLocation().getLongitude() < 139
-							&& status.getGeoLocation().getLongitude() > 138) {
+					DataObjectFactory.getRawJSON(status.getUser());
+					saveDocument(getDocument(String.valueOf(status.getId()),
 
-						DataObjectFactory.getRawJSON(status.getUser());
-						saveDocument(getDocument(
-								String.valueOf(status.getId()),
+					DataObjectFactory.getRawJSON(status)
 
-								DataObjectFactory.getRawJSON(status)
-
-						));
-
-					}
+					));
 				}
 
 			}
@@ -84,8 +71,13 @@ public final class TwitCollect {
 				ex.printStackTrace();
 			}
 		};
+
 		twitterStream.addListener(listener);
-		twitterStream.sample();
+		double[][] loc = { { 136.5271, -36.155618 },
+				{ 139.400024, -34.288992 },
+
+		};
+		twitterStream.filter(new FilterQuery().locations(loc));
 	}
 
 	public static void createDatabase(String ip, String dbName) {
