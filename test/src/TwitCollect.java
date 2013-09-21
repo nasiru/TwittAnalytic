@@ -18,13 +18,13 @@ public final class TwitCollect {
 
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
-				.setOAuthConsumerKey("")
+				.setOAuthConsumerKey("jbtkZ56X4XgvcDfakPq7dw")
 				.setOAuthConsumerSecret(
-						"")
+						"rrgErKydkFMOPgkBYspPY1aA265YFmyh0e10a3xRPbI")
 				.setOAuthAccessToken(
-						"-")
+						"494221271-iIqh0jnuX4vG6KOFkm4r9hN2oZfA0XI2M7iAkhUP")
 				.setOAuthAccessTokenSecret(
-						"");
+						"f3xkPvPp3mycFspGY9tLBrr8nfrV1EPiCGp8KDkP7M");
 		cb.setJSONStoreEnabled(true);
 
 		TwitterStreamFactory tf = new TwitterStreamFactory(cb.build());
@@ -34,7 +34,7 @@ public final class TwitCollect {
 			@Override
 			public void onStatus(Status status) {
 
-				System.out.println(status.toString());
+				// System.out.println(status.toString());
 				DataObjectFactory.getRawJSON(status.getUser());
 				saveDocument(getDocument(String.valueOf(status.getId()),
 						DataObjectFactory.getRawJSON(status)));
@@ -43,25 +43,25 @@ public final class TwitCollect {
 			@Override
 			public void onDeletionNotice(
 					StatusDeletionNotice statusDeletionNotice) {
-				 System.out.println("Got a status deletion notice id:" +
-				 statusDeletionNotice.getStatusId());
+				// System.out.println("Got a status deletion notice id:" +
+				// statusDeletionNotice.getStatusId());
 			}
 
 			@Override
 			public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-				 System.out.println("Got track limitation notice:" +
-				 numberOfLimitedStatuses);
+				// System.out.println("Got track limitation notice:" +
+				// numberOfLimitedStatuses);
 			}
 
 			@Override
 			public void onScrubGeo(long userId, long upToStatusId) {
-				 System.out.println("Got scrub_geo event userId:" + userId +
-				 " upToStatusId:" + upToStatusId);
+				// System.out.println("Got scrub_geo event userId:" + userId +
+				// " upToStatusId:" + upToStatusId);
 			}
 
 			@Override
 			public void onStallWarning(StallWarning warning) {
-				 System.out.println("Got stall warning:" + warning);
+				// System.out.println("Got stall warning:" + warning);
 			}
 
 			@Override
