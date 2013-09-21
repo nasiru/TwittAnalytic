@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Downloads/couchdb4j-0.1.2.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Desktop/testttt/json-lib-2.2.3-MODIFIED-jdk15.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Downloads/commons-lang-2.6/commons-lang-2.6.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Desktop/testttt/commons-beanutils.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Desktop/testttt/commons-codec-1.3.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Desktop/testttt/commons-collections.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Desktop/testttt/commons-logging-1.1.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Downloads/commons-httpclient-3.1.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Downloads/httpclient-4.2.1.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Downloads/httpcore-4.2.1.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Downloads/json_simple-1.1.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Downloads/ezmorph-1.0.6.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Documents/CloudComputing/twitter4j-3.0.3/lib/twitter4j-stream-3.0.3.jar"/>
+	<classpathentry kind="lib" path="/Users/ChiWang/Documents/CloudComputing/twitter4j-3.0.3/lib/twitter4j-core-3.0.3.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
