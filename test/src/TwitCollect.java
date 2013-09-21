@@ -16,13 +16,16 @@ public final class TwitCollect {
 
 		createDatabase(args[0], args[1]);
 
-        ConfigurationBuilder cb = new ConfigurationBuilder();
-     	cb.setDebugEnabled(true)
-     	  .setOAuthConsumerKey("")
-     	  .setOAuthConsumerSecret("")
-     	  .setOAuthAccessToken("-")
-     	  .setOAuthAccessTokenSecret("");
-     	cb.setJSONStoreEnabled(true);
+		ConfigurationBuilder cb = new ConfigurationBuilder();
+		cb.setDebugEnabled(true)
+				.setOAuthConsumerKey("")
+				.setOAuthConsumerSecret(
+						"")
+				.setOAuthAccessToken(
+						"-")
+				.setOAuthAccessTokenSecret(
+						"");
+		cb.setJSONStoreEnabled(true);
 
 		TwitterStreamFactory tf = new TwitterStreamFactory(cb.build());
 
@@ -30,40 +33,35 @@ public final class TwitCollect {
 		StatusListener listener = new StatusListener() {
 			@Override
 			public void onStatus(Status status) {
-				if (status.getGeoLocation() != null) {
 
-					DataObjectFactory.getRawJSON(status.getUser());
-					saveDocument(getDocument(String.valueOf(status.getId()),
-
-					DataObjectFactory.getRawJSON(status)
-
-					));
-				}
-
+				System.out.println(status.toString());
+				DataObjectFactory.getRawJSON(status.getUser());
+				saveDocument(getDocument(String.valueOf(status.getId()),
+						DataObjectFactory.getRawJSON(status)));
 			}
 
 			@Override
 			public void onDeletionNotice(
 					StatusDeletionNotice statusDeletionNotice) {
-				// System.out.println("Got a status deletion notice id:" +
-				// statusDeletionNotice.getStatusId());
+				 System.out.println("Got a status deletion notice id:" +
+				 statusDeletionNotice.getStatusId());
 			}
 
 			@Override
 			public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-				// System.out.println("Got track limitation notice:" +
-				// numberOfLimitedStatuses);
+				 System.out.println("Got track limitation notice:" +
+				 numberOfLimitedStatuses);
 			}
 
 			@Override
 			public void onScrubGeo(long userId, long upToStatusId) {
-				// System.out.println("Got scrub_geo event userId:" + userId +
-				// " upToStatusId:" + upToStatusId);
+				 System.out.println("Got scrub_geo event userId:" + userId +
+				 " upToStatusId:" + upToStatusId);
 			}
 
 			@Override
 			public void onStallWarning(StallWarning warning) {
-				// System.out.println("Got stall warning:" + warning);
+				 System.out.println("Got stall warning:" + warning);
 			}
 
 			@Override
