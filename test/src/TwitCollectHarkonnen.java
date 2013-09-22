@@ -6,7 +6,7 @@ import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 import twitter4j.json.DataObjectFactory;
 
-public final class TwitCollect {
+public final class TwitCollectHarkonnen {
 
 	static Session dbSession;
 
@@ -18,13 +18,13 @@ public final class TwitCollect {
 
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
-				.setOAuthConsumerKey("jbtkZ56X4XgvcDfakPq7dw")
+				.setOAuthConsumerKey("rIKuewFKBmTzXsLSr6wQ")
 				.setOAuthConsumerSecret(
-						"rrgErKydkFMOPgkBYspPY1aA265YFmyh0e10a3xRPbI")
+						"whwtGdosnP1oTQb7pGPODd7kwLipR3LHsWAdlQj48")
 				.setOAuthAccessToken(
-						"494221271-iIqh0jnuX4vG6KOFkm4r9hN2oZfA0XI2M7iAkhUP")
+						"1889233045-7rxY0XkdAz0RIlskPKebkhCbbhOQLczMS6TxSiH")
 				.setOAuthAccessTokenSecret(
-						"f3xkPvPp3mycFspGY9tLBrr8nfrV1EPiCGp8KDkP7M");
+						"3rwIzw7rSZBYFYVAm3ECF1xUDys3F9Lt7Zwv3x09xQ");
 		cb.setJSONStoreEnabled(true);
 
 		TwitterStreamFactory tf = new TwitterStreamFactory(cb.build());
@@ -71,8 +71,8 @@ public final class TwitCollect {
 		};
 
 		twitterStream.addListener(listener);
-		double[][] loc = { { 136.5271, -36.155618 },
-				{ 139.400024, -34.288992 },
+		double[][] loc = { { 134.351807, -35.236646 },
+				{ 140.778809, -34.687428 },
 
 		};
 		twitterStream.filter(new FilterQuery().locations(loc));
