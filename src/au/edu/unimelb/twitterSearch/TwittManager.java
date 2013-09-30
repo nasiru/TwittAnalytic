@@ -25,7 +25,7 @@ public class TwittManager {
 		cb.setOAuthAccessToken("1113512082-5MxDAbl2q7VljMl7EMH3TxVSaZjqn9CVBaDZwIz");
 		cb.setOAuthAccessTokenSecret("CGBO3as3PqKv7XBCLYlixySNO9I0LvJqRW16ySJaQ");
 		twitter = new TwitterFactory(cb.build()).getInstance();
-		sentClassifier = new SentimentClassifier();
+		sentClassifier = new SentimentClassifier("classifier.txt");
 	}
 
 	public void performQuery(String inQuery) throws InterruptedException, IOException {
