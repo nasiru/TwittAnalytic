@@ -2053,13 +2053,16 @@ public class extraction {
 				doc.put("twit", jObj.toString());
 
 				System.out.println(doc.toString());
+				//System.out.println(doc.toString());
 				try {
 
 					db.saveDocument(doc);
 
 				} catch (Exception e) {
 					
+					
 					System.err.println(e);
+					System.out.println(doc.toString());
 					doc.clear();
 					continue;
 
