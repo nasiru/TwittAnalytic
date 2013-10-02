@@ -2052,7 +2052,6 @@ public class extraction {
 
 				doc.put("twit", jObj.toString());
 
-				System.out.println(doc.toString());
 				//System.out.println(doc.toString());
 				try {
 
