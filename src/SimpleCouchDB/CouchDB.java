@@ -8,6 +8,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbProperties;
@@ -28,6 +29,7 @@ public class CouchDB {
 	private String view_GeoLocationByTime = "geo/geo_location_over_time";
 	private String view_CountTweet = "tweet/count_tweet_over_time";
 	private String view_TweetMessage = "tweet/tweet_message_over_time";
+	private String view_Tweet = "tweet/tweet_over_time";
 	
 	public CouchDB(){
 		//CouchDB connection
@@ -163,7 +165,80 @@ public class CouchDB {
 			}
 		}
 		
-		return sentiment;
+		return sentiment;	
+	}
+	
+	public UserStatList getTopUser(String c_filename, 
+										Date start_date, 
+										Date end_date){
+		
+		int[] modified_start_date = convertToDateArray(start_date);
+		int[] modified_end_date = convertToDateArray(end_date);
+		
+		List<JsonObject> allDocs = dbClient.view(view_Tweet)
+											.startKey(modified_start_date)
+											.endKey(modified_end_date)
+											.query(JsonObject.class);
+		
+		SentimentClassifier classifier = new SentimentClassifier(c_filename);
+
+		//Map<String, Integer> table = new HashMap<String, Integer>();
+		Map<String, UserStat> table = new HashMap<String, UserStat>();
+		/*ValueComparator compare_pos =  new ValueComparator(table,"pos");
+		ValueComparator compare_neg =  new ValueComparator(table,"neg");
+		ValueComparator compare_neu =  new ValueComparator(table,"neu");
+		ValueComparator compare_all =  new ValueComparator(table,"all");
+		TreeMap<String, Integer> rankingTable = new TreeMap<String, Integer>(bvc);*/
+		
+		for(JsonObject json : allDocs){
+			String user = json.getAsJsonObject("value").get("screen_name").getAsString();
+			String message = json.getAsJsonObject("value").get("message").getAsString();
+			String feedback = classifier.classify(message);
+			UserStat userstat;
+			
+			if(!table.containsKey(user)){
+				userstat =  new UserStat(user);
+				userstat.increment(feedback);
+				table.put(user, userstat);
+			}
+			//Increment the value if 
+			else{
+				userstat = table.get(user);
+				userstat.increment(feedback);
+				table.put(user, userstat);
+			}
+		}
+
+		return new UserStatList(table);
+		// Put the map in the tree
+		/*rankingTable.putAll(table);
+		
+		List<UserStat> users = new ArrayList();
+		int counter = 1;
+		for(String key : rankingTable.keySet()){
+			//Set name and count negative, positive or neutral tweet
+			UserStat user = new UserStat(key);
+			if(sentiment.equals("pos")){
+				user.setPositive_tweet(table.get(key));
+			}
+			else if(sentiment.equals("neg")){
+				user.setNegative_tweet(table.get(key));
+			}
+			else if(sentiment.equals("neu")){
+				user.setNeutral_tweet(table.get(key));
+			}
+			else if(sentiment.equals("all")){
+				user.setAll_tweet(table.get(key));
+			}
+			//Add user to the list
+			users.add(user);
+			
+			//Break when reach the topk
+			if(counter == topk) break;
+			counter++;
+		}
+		
+		return users;*/
 		
 	}
 	
@@ -275,11 +350,32 @@ public class CouchDB {
 			e.printStackTrace();
 		}
 		
+		UserStatList list = db.getTopUser("classifier.txt",start_time, end_time);
+		List<UserStat> sortedList1 = list.getListSortedByPos(10);
+		List<UserStat> sortedList2 = list.getListSortedByNeg(10);
+		List<UserStat> sortedList3 = list.getListSortedByNeu(10);
+		List<UserStat> sortedList4 = list.getListSortedByTotalTweet(10);
 		
-		TweetSentiment sentiment = db.getSentiment("classifier.txt",start_time, end_time);
+		for(UserStat u : sortedList1){
+			System.out.println(u.getScreen_name() + "=" + u.getPositive_tweet());
+		}
+		System.out.println("------------------");
+		for(UserStat u : sortedList2){
+			System.out.println(u.getScreen_name() + "=" + u.getNegative_tweet());
+		}
+		System.out.println("------------------");
+		for(UserStat u : sortedList3){
+			System.out.println(u.getScreen_name() + "=" + u.getNeutral_tweet());
+		}
+		System.out.println("------------------");
+		for(UserStat u : sortedList4){
+			System.out.println(u.getScreen_name() + "=" + u.getAll_tweet());
+		}
+		
+		/*TweetSentiment sentiment = db.getSentiment("classifier.txt",start_time, end_time);
 		System.out.println("positive=" + sentiment.getPositive() );
 		System.out.println("negative=" + sentiment.getNegative() );
-		System.out.println("neutral=" + sentiment.getNeutral() );
+		System.out.println("neutral=" + sentiment.getNeutral() );*/
 		
 		/*System.out.println(db.countDailyTweet(start_time, end_time));
 		

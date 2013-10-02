@@ -15,5 +15,8 @@
                         <li <% if(request.getRequestURI().contains("sentiment.jsp")) {out.print("class=\"active\"");}  %>>
                             <a href="sentiment.jsp"><i class="icon-chevron-right"></i> Sentiment Analysis</a>
                         </li>
+                        <li <% if(request.getRequestURI().contains("top_user.jsp")) {out.print("class=\"active\"");}  %>>
+                            <a href="top_user.jsp"><i class="icon-chevron-right"></i> Top Users</a>
+                        </li>
                     </ul>
                 </div>

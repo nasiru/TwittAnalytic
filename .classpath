@@ -43,12 +43,12 @@
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/praponc/TwittAnalytic/lib/lingpipe-4.1.0.jar">
+	<classpathentry kind="lib" path="/Users/praponc/Documents/Unimelb/CloudComputing/assignment2/libs/lingpipe-4.1.0.jar">
 		<attributes>
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/praponc/TwittAnalytic/lib/twitter4j-core-3.0.3.jar">
+	<classpathentry kind="lib" path="/Users/praponc/Documents/Unimelb/CloudComputing/assignment2/libs/twitter4j-core-3.0.3.jar">
 		<attributes>
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
 		</attributes>
