@@ -135,7 +135,7 @@
 						              	%>
 						                <tr>
 						                  <td><%= i %></td>
-						                  <td><a href="trackuser.jsp?user=<%= top_frequent_users.get(i-1).getScreen_name() %>&limit=<%= top_frequent_users.get(i-1).getAll_tweet() %>"><%= top_frequent_users.get(i-1).getScreen_name() %></a></td>
+						                  <td><a href="trackuser.jsp?user=<%= top_frequent_users.get(i-1).getScreen_name() %>&start_date=<%= dateFormat2.format(start_date) %>&end_date=<%= dateFormat2.format(end_date) %>&limit=100"><%= top_frequent_users.get(i-1).getScreen_name() %></a></td>
 						                  <td><%= top_frequent_users.get(i-1).getAll_tweet() %></td>
 						                </tr>
 						                <%} %>
@@ -173,7 +173,7 @@
 						              	%>
 						                <tr>
 						                  <td><%= i %></td>
-						                  <td><%= top_neutral_users.get(i-1).getScreen_name() %></td>
+						                  <td><a href="trackuser.jsp?user=<%= top_frequent_users.get(i-1).getScreen_name() %>&start_date=<%= dateFormat2.format(start_date) %>&end_date=<%= dateFormat2.format(end_date) %>&limit=100"><%= top_neutral_users.get(i-1).getScreen_name() %></a></td>
 						                  <td><%= top_neutral_users.get(i-1).getNeutral_tweet() %></td>
 						                </tr>
 						                <%} %>
@@ -211,7 +211,7 @@
 						              	%>
 						                <tr>
 						                  <td><%= i %></td>
-						                  <td><%= top_negative_users.get(i-1).getScreen_name() %></td>
+						                  <td><a href="trackuser.jsp?user=<%= top_frequent_users.get(i-1).getScreen_name() %>&start_date=<%= dateFormat2.format(start_date) %>&end_date=<%= dateFormat2.format(end_date) %>&limit=100"><%= top_negative_users.get(i-1).getScreen_name() %></a></td>
 						                  <td><%= top_negative_users.get(i-1).getNegative_tweet() %></td>
 						                </tr>
 						                <%} %>
@@ -249,7 +249,7 @@
 						              	%>
 						                <tr>
 						                  <td><%= i %></td>
-						                  <td><%= top_positive_users.get(i-1).getScreen_name() %></td>
+						                  <td><a href="trackuser.jsp?user=<%= top_frequent_users.get(i-1).getScreen_name() %>&start_date=<%= dateFormat2.format(start_date) %>&end_date=<%= dateFormat2.format(end_date) %>&limit=100"><%= top_positive_users.get(i-1).getScreen_name() %></a></td>
 						                  <td><%= top_positive_users.get(i-1).getPositive_tweet() %></td>
 						                </tr>
 						                <%} %>

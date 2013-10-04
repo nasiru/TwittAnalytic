@@ -37,6 +37,14 @@ body {
 }
 
 /** Google Map interface **/
+#map-canvas-small {
+  height: 200px;
+  width: 400px;
+  margin-bottom: 15px;
+  margin-left: 0px;
+  padding: 0;
+}
+
 #map-canvas, #map_canvas {
   height: 400px;
   width: 100%;
@@ -60,6 +68,14 @@ body {
   background-color: #fff;
   padding: 5px;
   border: 1px solid #999;
+}
+
+.gmnoprint img {
+	max-width: none; 
+}
+
+img[src*="gstatic.com/"], img[src*="googleapis.com/"] {
+max-width: none;
 }
 
 /** 2 level sub menu **/

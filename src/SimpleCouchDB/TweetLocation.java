@@ -1,5 +1,7 @@
 package SimpleCouchDB;
 
+import au.edu.unimelb.twitterSearch.SentimentClassifier;
+
 public class TweetLocation {
 
 	private String id;
@@ -9,6 +11,7 @@ public class TweetLocation {
 	private double lng;
 	
 	private String screen_name;
+	private String message;
 	
 	public TweetLocation(String id, String screen_name, double lat, double lng){
 		this.setId(id);
@@ -47,6 +50,28 @@ public class TweetLocation {
 
 	public void setLng(double lng) {
 		this.lng = lng;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+		
+	}
+
+	public String getSentiment(String c_filename) {
+		
+		SentimentClassifier classifier = new SentimentClassifier(c_filename);
+		
+		if(message == null){
+			return null;
+		}
+		else{
+			return classifier.classify(this.message);
+		}
+		
 	}
 
 }

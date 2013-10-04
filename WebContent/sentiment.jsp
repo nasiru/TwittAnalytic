@@ -5,26 +5,41 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="org.lightcouch.CouchDbException" %>
+<%@ page import="twitter4j.GeoLocation" %>
 
 <%
-	Date start_date = new SimpleDateFormat("dd/MM/yyyy").parse("20/09/2013");
+	Date start_date = new SimpleDateFormat("dd/MM/yyyy").parse("24/09/2013");
 	Date end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse("25/09/2013 23:59:59");
 
 	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	SimpleDateFormat dateFormat2 = new SimpleDateFormat("dd/MM/yyyy");
 
+	RectArea rectangle = new RectArea(new GeoLocation(-34.8333,138.7),
+										new GeoLocation(-35.0333,138.5));
 	TweetSentiment sentiment;
 	//Access DB and retrive the count for everyday
 	CouchDB db = new CouchDB();
 	String c_filename = getServletContext().getRealPath("classifier/classifier.txt");
+	
+	//Get area of interest from parameter attached in the URL
+	if(request.getParameter("ne_lat") != null && request.getParameter("ne_lng") != null &&
+		request.getParameter("sw_lat") != null && request.getParameter("sw_lng") != null){
+		rectangle = new RectArea(new GeoLocation(
+										Double.parseDouble(request.getParameter("ne_lat")), 
+										Double.parseDouble(request.getParameter("ne_lng"))),
+								 new GeoLocation(
+										Double.parseDouble(request.getParameter("sw_lat")),
+										Double.parseDouble(request.getParameter("sw_lng")))
+								);
+	}
 			
 	if(request.getParameter("start_date") != null && request.getParameter("end_date") != null){
 		start_date = new SimpleDateFormat("dd/MM/yyyy").parse( request.getParameter("start_date") );
 		end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse( request.getParameter("end_date") + " 23:59:59");
-		sentiment = db.getSentiment(c_filename,start_date, end_date);
+		sentiment = db.getSentiment(c_filename,rectangle,start_date, end_date);
 	}
 	else{
-		sentiment = db.getSentiment(c_filename,start_date, end_date);
+		sentiment = db.getSentiment(c_filename,rectangle,start_date, end_date);
 		
 	}
 	
@@ -47,6 +62,79 @@
             <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
         <script src="vendors/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+        <script type="text/javascript"
+      		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAe8RpD7yqP4R_68vC94uPNXWYgxiWVm_o&sensor=false">
+    	</script>
+        <script>
+// This example adds a user-editable rectangle to the map.
+// When the user changes the bounds of the rectangle,
+// an info window pops up displaying the new bounds.
+var adelaid = new google.maps.LatLng(-34.9333, 138.6);
+var center_point = new google.maps.LatLng( <%= rectangle.getMiddlePoint().getLatitude() %>, <%= rectangle.getMiddlePoint().getLongitude() %>);
+
+var rectangle;
+var map;
+var infoWindow;
+
+function initialize() {
+  var mapOptions = {
+    center: center_point,
+    zoom: 9,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  };
+  map = new google.maps.Map(document.getElementById('map-canvas-small'),
+      mapOptions);
+
+  var bounds = new google.maps.LatLngBounds(
+	  new google.maps.LatLng(<%= rectangle.getSouth_west().getLatitude() %>, <%= rectangle.getSouth_west().getLongitude() %>),
+      new google.maps.LatLng(<%= rectangle.getNorth_east().getLatitude() %>, <%= rectangle.getNorth_east().getLongitude() %>)
+  );
+
+  // Define the rectangle and set its editable property to true.
+  rectangle = new google.maps.Rectangle({
+    bounds: bounds,
+    strokeColor: '#FF0000',
+    strokeWeight: 0.5,
+    fillColor: '#FF0000',
+    fillOpacity: 0.2,
+    editable: true,
+    draggable: true
+  });
+
+  rectangle.setMap(map);
+
+  // Add an event listener on the rectangle.
+  google.maps.event.addListener(rectangle, 'bounds_changed', showNewRect);
+
+  // Define an info window on the map.
+  infoWindow = new google.maps.InfoWindow();
+}
+// Show the new coordinates for the rectangle in an info window.
+
+/** @this {google.maps.Rectangle} */
+function showNewRect(event) {
+  var ne = rectangle.getBounds().getNorthEast();
+  var sw = rectangle.getBounds().getSouthWest();
+  
+  document.getElementById("ne_lat").value = ne.lat();
+  document.getElementById("ne_lng").value = ne.lng();
+  document.getElementById("sw_lat").value = sw.lat();
+  document.getElementById("sw_lng").value = sw.lng();
+
+  /*var contentString = '<b>Rectangle moved.</b><br>' +
+      'New north-east corner: ' + ne.lat() + ', ' + ne.lng() + '<br>' +
+      'New south-west corner: ' + sw.lat() + ', ' + sw.lng();*/
+
+  // Set the info window's content and position.
+  //infoWindow.setContent(contentString);
+  //infoWindow.setPosition(ne);
+
+  //infoWindow.open(map);
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
     </head>
     
     <body>
@@ -83,7 +171,28 @@
 		                                          <div class="controls">
 		                                            <input type="text" class="datepicker" id="date02" name="end_date" value="<%= dateFormat2.format(end_date) %>">
 		                                          </div>
+		                                    </div>                           
+		                                    <div class="control-group">
+		                                          <label class="control-label" for="typeahead">Select Area </label>
+		                                          <div class="controls">
+		                                            <div id="map-canvas-small"></div>
+		                                          </div>
 		                                    </div>
+		                                    <div class="control-group">
+		                                          <label class="control-label" for="typeahead">NE Position </label>
+		                                          <div class="controls">
+		                                             <input class="input disabled" name="ne_lat" id="ne_lat" type="text" value="<%= rectangle.getNorth_east().getLatitude() %>" readonly>
+		                                          	 <input class="input disabled" name="ne_lng" id="ne_lng" type="text" value="<%= rectangle.getNorth_east().getLongitude() %>" readonly>
+		                                          </div>
+		                                    </div>
+		                                    <div class="control-group">
+		                                          <label class="control-label" for="typeahead">SW Position </label>
+		                                          <div class="controls">
+		                                             <input class="input disabled" name="sw_lat" id="sw_lat" type="text" value="<%= rectangle.getSouth_west().getLatitude() %>" readonly>
+		                                          	 <input class="input disabled" name="sw_lng" id="sw_lng" type="text" value="<%= rectangle.getSouth_west().getLongitude() %>" readonly></div>
+		                                    </div>
+		                                   
+		                                    
 		                                    <div class="control-group">
 		                                          <div class="controls">
 		                                            <button type="submit" class="btn btn-primary">Submit</button>
@@ -100,6 +209,7 @@
                                     <h5>Sentiment(Bar)</h5>
                                     <div id="hero-bar" style="width:100%;height:200px"></div>
                                 </div>
+                                
                             
 
                             </div>

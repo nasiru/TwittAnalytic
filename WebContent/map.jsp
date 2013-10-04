@@ -5,6 +5,48 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="org.lightcouch.CouchDbException" %>
+<%@ page import="java.net.*" %>
+
+<%
+	int limit = 10;
+	boolean sentiment = false;
+	Date start_date = null;
+	Date end_date = null;
+	
+	SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+
+	List<TweetLocation> locations;
+	
+	if(request.getParameter("limit") != null){
+		limit = Integer.parseInt( request.getParameter("limit") );
+	}
+	if(request.getParameter("sentiment") != null){
+		if(Integer.parseInt( request.getParameter("sentiment")) == 1){
+			sentiment = true;
+		}
+		else{
+			sentiment = false;
+		}
+	}
+
+	CouchDB db = new CouchDB();
+	String c_filename = getServletContext().getRealPath("classifier/classifier.txt");
+
+	if( (request.getParameter("start_date") != null || request.getParameter("end_date") != null) 
+			&& (!request.getParameter("start_date").equals("") || !request.getParameter("end_date").equals("") )){
+		start_date = new SimpleDateFormat("dd/MM/yyyy").parse(request.getParameter("start_date"));
+		end_date = new SimpleDateFormat("dd/MM/yyyy").parse(request.getParameter("end_date"));
+		try{
+			locations = db.getTweetLocations(limit,start_date,end_date);
+		}
+		catch(CouchDbException e){
+			locations = null;
+		}
+	}
+	else{
+		locations = db.getTweetLocations(limit);
+	}
+%>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -30,47 +72,45 @@
         
         <script type="text/javascript">
 	        var adelaid = new google.maps.LatLng(-34.9333, 138.6);
+	        var sentimentFlag = <%= sentiment %>;
 	
 	        var neighborhoods = [
-<%
-	int limit = 10;
-	Date start_date = null;
-	Date end_date = null;
-	
-	SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-
-	List<TweetLocation> locations;
-	
-	if(request.getParameter("limit") != null){
-		limit = Integer.parseInt( request.getParameter("limit") );
-	}
-
-	CouchDB db = new CouchDB();
-
-	if(request.getParameter("start_date") != null || request.getParameter("end_date") != null){
-		start_date = new SimpleDateFormat("dd/MM/yyyy").parse(request.getParameter("start_date"));
-		end_date = new SimpleDateFormat("dd/MM/yyyy").parse(request.getParameter("end_date"));
-		try{
-			locations = db.getTweetLocations(limit,start_date,end_date);
-		}
-		catch(CouchDbException e){
-			locations = null;
-		}
-	}
-	else{
-		locations = db.getTweetLocations(limit);
-	}
-
-	for(TweetLocation location : locations){
-		out.println("new google.maps.LatLng(" + location.getLat() + "," + location.getLng() +"),");
-	}
-
-%>
+						<%
+							for(TweetLocation location : locations){
+								out.println("new google.maps.LatLng(" + location.getLat() + "," + location.getLng() +"),");
+							}
+						
+						%>
 	        ];
+	        
+	        var details = [
+						<%
+						for(TweetLocation location : locations){
+							out.println("\"<b><a href=trackuser.jsp?limit=50&user=" + location.getScreen_name() + ">" + location.getScreen_name() + "</a></b><p>" + location.getMessage()
+																							.replaceAll("\"", "") 
+																							.replaceAll(",", "")
+																							.replaceAll("'", "")
+																							+ "</p>\",");
+							//out.println("\"<b><a href=trackuser.jsp?=>" + location.getScreen_name() +"</a></b>\",");
+							//out.println("\"555\",");
+						}
+						
+						%>    
+	        
+	        ];
+	        
+	        var sentiment = [
+						<%
+							for(TweetLocation location : locations){
+								out.println("\""+location.getSentiment(c_filename)+"\",");
+							}
+						
+						%>       
+	                         ];
 	
 	        var markers = [];
 	        var iterator = 0;
-	
+	        var infowindow;
 	        var map;
 	
 	        function initialize() {
@@ -80,18 +120,55 @@
 	            center: adelaid
 	          };
 	          
-	          for (var i = 0; i < neighborhoods.length; i++) {
-	        	    setTimeout(function() {
-	        	      addMarker();
-	        	    }, i * 10);
-	        	  }
-	
 	          map = new google.maps.Map(document.getElementById('map-canvas'),
 	                  mapOptions);
+	          
+	          for (var i = 0; i < neighborhoods.length; i++) {
+	        	  if(!sentimentFlag){
+	        		  setTimeout(function() { addMarker("blue");}, i * 10);
+	        	  }
+	        	  else if(sentiment[i] == "pos"){
+	        		  setTimeout(function() { addMarker("green");}, i * 0);
+	        	  }
+	        	  else if(sentiment[i] == "neg"){
+	        		  setTimeout(function() { addMarker("red");}, i * 0);
+	        	  }
+	        	  else if(sentiment[i] == "neu"){
+	        		  setTimeout(function() { addMarker("yellow");}, i * 0);
+	        	  }
+	        	    
+	        	}
+	
+	          
 	        }
+	        
+	        function addMarker(color) {
+	        	  var marker = new google.maps.Marker({
+			            position: neighborhoods[iterator],
+			            map: map,
+			            draggable: false,
+			            icon: 'http://maps.google.com/mapfiles/ms/icons/'+color+'-dot.png',
+			            animation: google.maps.Animation.DROP
+			      });
+	        	  
+
+	        	  var index = iterator;
+		          
+		          google.maps.event.addListener(marker, 'click', function(){
+  					  if(infowindow) infowindow.close();
+  					  infowindow = new google.maps.InfoWindow({
+		  	        	content : details[index],
+  						maxWidth : 200
+				  	  });
+		        	  infowindow.open(map, marker);
+		          });
+		          
+		          markers.push(marker);
+		          iterator++;
+		    }
 	
 	
-	        function addMarker() {
+	        function addMarkerG() {
 	          markers.push(new google.maps.Marker({
 	            position: neighborhoods[iterator],
 	            map: map,
@@ -101,6 +178,28 @@
 	          }));
 	          iterator++;
 	        }
+	        
+	        function addMarkerR() {
+		          markers.push(new google.maps.Marker({
+		            position: neighborhoods[iterator],
+		            map: map,
+		            draggable: false,
+		            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+		            animation: google.maps.Animation.DROP
+		          }));
+		          iterator++;
+		    }
+	        
+	        function addMarkerY() {
+		          markers.push(new google.maps.Marker({
+		            position: neighborhoods[iterator],
+		            map: map,
+		            draggable: false,
+		            icon: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+		            animation: google.maps.Animation.DROP
+		          }));
+		          iterator++;
+		        }
 	
 	        google.maps.event.addDomListener(window, 'load', initialize);
     	</script>
@@ -147,6 +246,15 @@
 		                                            <input type="text" id="date02" name="limit" value="<%= limit %>">
 		                                          </div>
 		                                    </div>
+		                                    <div class="control-group">
+		                                    	<div class="controls">
+	                                            <label>
+	                                              <input type="checkbox" id="optionsCheckbox2" name="sentiment" value="1" <% if(sentiment) out.println("checked"); %>>
+	                                              Sentiment Analysis (<img src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"/>= positive, <img src="http://maps.google.com/mapfiles/ms/icons/red-dot.png"/>= negative, <img src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"/>= neutral)
+	                                            </label>
+	                                            </div>
+                                          	</div>
+		                                    
 		                                    <div class="control-group">
 		                                          <div class="controls">
 		                                            <button type="submit" class="btn btn-primary">Submit</button>

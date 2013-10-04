@@ -14,6 +14,8 @@ import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbProperties;
 import org.lightcouch.CouchDbException;
 
+import twitter4j.GeoLocation;
+
 import au.edu.unimelb.twitterSearch.SentimentClassifier;
 
 import com.google.gson.JsonArray;
@@ -59,21 +61,27 @@ public class CouchDB {
 	
 	public List<TweetLocation> getTweetLocations(int limit){
 		
-		//List<JsonObject> allDocs = dbClient.view("all/geo_location").limit(limit).query(JsonObject.class);
-		List<JsonObject> allDocs = dbClient.view(view_GeoLocationOfUser).limit(limit).query(JsonObject.class);
 		
+		//List<JsonObject> allDocs = dbClient.view(view_GeoLocationOfUser).limit(limit).query(JsonObject.class);
+		List<JsonObject> allDocs = dbClient.view(view_Tweet).limit(limit).query(JsonObject.class);
+		//view_Tweet
 		String id;
 		String screen_name;
+		String message;
 		double[] geolocation = new double[2];
 		List<TweetLocation> list = new ArrayList<TweetLocation>();
 		
 		for(JsonObject json : allDocs){
-			screen_name = json.get("key").getAsString();
-			geolocation[0] = json.get("value").getAsJsonArray().get(0).getAsDouble();
-			geolocation[1] = json.get("value").getAsJsonArray().get(1).getAsDouble();
+			screen_name = json.getAsJsonObject("value").get("screen_name").getAsString();
+			message = json.getAsJsonObject("value").get("message").getAsString();
+			geolocation[0] = json.getAsJsonObject("value").get("geo").getAsJsonArray().get(0).getAsDouble();
+			geolocation[1] = json.getAsJsonObject("value").get("geo").getAsJsonArray().get(1).getAsDouble();
 			id = json.get("id").getAsString();
 			
-			list.add(new TweetLocation(id,screen_name,geolocation[0],geolocation[1]));
+			TweetLocation tweetlocation = new TweetLocation(id,screen_name,geolocation[0],geolocation[1]);
+			tweetlocation.setMessage(message);
+			
+			list.add(tweetlocation);
 			
 			/*System.out.println(screen_name);
 			System.out.println(geolocation[0]);
@@ -112,24 +120,30 @@ public class CouchDB {
 		int[] modified_end_date = convertToDateArray(end_date);
 		
 		//List<JsonObject> allDocs = dbClient.view("all/geo_location_time")
-		List<JsonObject> allDocs = dbClient.view(view_GeoLocationByTime)
+		//List<JsonObject> allDocs = dbClient.view(view_GeoLocationByTime)
+		List<JsonObject> allDocs = dbClient.view(view_Tweet)
 											.limit(limit)
 											.startKey(modified_start_date)
 											.endKey(modified_end_date)
 											.query(JsonObject.class);
 		String id;
 		String screen_name;
+		String message;
 		double[] geolocation = new double[2];
 		List<TweetLocation> list = new ArrayList<TweetLocation>();
 		
 		for(JsonObject json : allDocs){
 			//screen_name = json.get("key").getAsString();
-			screen_name = json.get("key").toString();
-			geolocation[0] = json.get("value").getAsJsonArray().get(0).getAsDouble();
-			geolocation[1] = json.get("value").getAsJsonArray().get(1).getAsDouble();
+			screen_name = json.getAsJsonObject("value").get("screen_name").getAsString();
+			message = json.getAsJsonObject("value").get("message").getAsString();
+			geolocation[0] = json.getAsJsonObject("value").get("geo").getAsJsonArray().get(0).getAsDouble();
+			geolocation[1] = json.getAsJsonObject("value").get("geo").getAsJsonArray().get(1).getAsDouble();
 			id = json.get("id").getAsString();
-				
-			list.add(new TweetLocation(id,screen_name,geolocation[0],geolocation[1]));
+			
+			TweetLocation tweetlocation = new TweetLocation(id,screen_name,geolocation[0],geolocation[1]);
+			tweetlocation.setMessage(message);
+			
+			list.add(tweetlocation);
 		}
 		
 		return list;
@@ -162,6 +176,46 @@ public class CouchDB {
 			}
 			else if(feedback.equals("neu")){ //Neutral tweet
 				sentiment.incrementNeutral();
+			}
+		}
+		
+		return sentiment;	
+	}
+	
+	public TweetSentiment getSentiment(String c_filename, RectArea area,Date start_date, Date end_date){
+		
+		int[] modified_start_date = convertToDateArray(start_date);
+		int[] modified_end_date = convertToDateArray(end_date);
+		
+		List<JsonObject> allDocs = dbClient.view(view_Tweet)
+											.startKey(modified_start_date)
+											.endKey(modified_end_date)
+											.query(JsonObject.class);
+		
+		String tweet_message;
+		TweetSentiment sentiment = new TweetSentiment();
+		SentimentClassifier classifier = new SentimentClassifier(c_filename);
+		double[] geolocation = new double[2];
+		
+		for(JsonObject json : allDocs){
+			tweet_message = json.getAsJsonObject("value").get("message").getAsString();
+
+			geolocation[0] = json.getAsJsonObject("value").get("geo").getAsJsonArray().get(0).getAsDouble();
+			geolocation[1] = json.getAsJsonObject("value").get("geo").getAsJsonArray().get(1).getAsDouble();
+
+			if(area.isInside(geolocation[0], geolocation[1])){
+				//System.out.println("msg=" + tweet_message);
+				String feedback = classifier.classify(tweet_message);
+				//System.out.println(feedback + " = " + tweet_message);
+				if(feedback.equals("pos")){	//Positive tweet
+					sentiment.incrementPositive();
+				}
+				else if(feedback.equals("neg")){ //Negative tweet
+					sentiment.incrementNegative();
+				}
+				else if(feedback.equals("neu")){ //Neutral tweet
+					sentiment.incrementNeutral();
+				}
 			}
 		}
 		
@@ -210,36 +264,6 @@ public class CouchDB {
 		}
 
 		return new UserStatList(table);
-		// Put the map in the tree
-		/*rankingTable.putAll(table);
-		
-		List<UserStat> users = new ArrayList();
-		int counter = 1;
-		for(String key : rankingTable.keySet()){
-			//Set name and count negative, positive or neutral tweet
-			UserStat user = new UserStat(key);
-			if(sentiment.equals("pos")){
-				user.setPositive_tweet(table.get(key));
-			}
-			else if(sentiment.equals("neg")){
-				user.setNegative_tweet(table.get(key));
-			}
-			else if(sentiment.equals("neu")){
-				user.setNeutral_tweet(table.get(key));
-			}
-			else if(sentiment.equals("all")){
-				user.setAll_tweet(table.get(key));
-			}
-			//Add user to the list
-			users.add(user);
-			
-			//Break when reach the topk
-			if(counter == topk) break;
-			counter++;
-		}
-		
-		return users;*/
-		
 	}
 	
 	public int countTweet(Date start_date, Date end_date){
@@ -350,7 +374,7 @@ public class CouchDB {
 			e.printStackTrace();
 		}
 		
-		UserStatList list = db.getTopUser("classifier.txt",start_time, end_time);
+		/*UserStatList list = db.getTopUser("classifier.txt",start_time, end_time);
 		List<UserStat> sortedList1 = list.getListSortedByPos(10);
 		List<UserStat> sortedList2 = list.getListSortedByNeg(10);
 		List<UserStat> sortedList3 = list.getListSortedByNeu(10);
@@ -370,16 +394,19 @@ public class CouchDB {
 		System.out.println("------------------");
 		for(UserStat u : sortedList4){
 			System.out.println(u.getScreen_name() + "=" + u.getAll_tweet());
-		}
+		}*/
 		
-		/*TweetSentiment sentiment = db.getSentiment("classifier.txt",start_time, end_time);
+		//TweetSentiment sentiment = db.getSentiment("classifier.txt",start_time, end_time);
+		RectArea my_area = new RectArea(new GeoLocation(-34.89187235171962, 138.65920136914065), 
+										new GeoLocation(-34.95871643413578, 138.55756948632802));
+		TweetSentiment sentiment = db.getSentiment("classifier.txt",my_area,start_time, end_time);
 		System.out.println("positive=" + sentiment.getPositive() );
 		System.out.println("negative=" + sentiment.getNegative() );
-		System.out.println("neutral=" + sentiment.getNeutral() );*/
+		System.out.println("neutral=" + sentiment.getNeutral() );
 		
-		/*System.out.println(db.countDailyTweet(start_time, end_time));
+		//System.out.println(db.countDailyTweet(start_time, end_time));
 		
-		List<TweetCount> temp = db.countDailyTweet(start_time, end_time);
+		/*List<TweetCount> temp = db.countDailyTweet(start_time, end_time);
 		for(TweetCount count_obj : temp){
 			System.out.println(count_obj.getDate());
 			System.out.println(count_obj.getCount());
