@@ -5,8 +5,8 @@
                      <span class="icon-bar"></span>
                      <span class="icon-bar"></span>
                     </a>
-                    <a class="brand" href="#">Admin Panel</a>
-                    <div class="nav-collapse collapse">
+                    <a class="brand" href="#">Big Data Analytics in NecTER Cloud</a>
+                    <!--div class="nav-collapse collapse">
                         <ul class="nav pull-right">
                             <li class="dropdown">
                                 <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown"> <i class="icon-user"></i> Vincent Gabriel <i class="caret"></i>
@@ -103,7 +103,7 @@
                                 </ul>
                             </li>
                         </ul>
-                    </div>
+                    </div-->
                     <!--/.nav-collapse -->
                 </div>
             </div>
