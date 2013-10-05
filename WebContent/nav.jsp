@@ -1,7 +1,7 @@
 <div class="span3" id="sidebar">
                     <ul class="nav nav-list bs-docs-sidenav nav-collapse collapse">
                         <li <% if(request.getRequestURI().contains("index.jsp")) {out.print("class=\"active\"");}  %>>
-                            <a href="index.jsp"><i class="icon-chevron-right"></i> Dashboard</a>
+                            <a href="index.jsp"><i class="icon-chevron-right"></i> Top Tweets</a>
                         </li>
                         <li <% if(request.getRequestURI().contains("map.jsp")) {out.print("class=\"active\"");}  %>>
                             <a href="map.jsp"><i class="icon-chevron-right"></i> Google Map</a>
