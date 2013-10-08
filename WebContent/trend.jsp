@@ -2,6 +2,7 @@
     pageEncoding="ISO-8859-1"%>
 <%@ page import="SimpleCouchDB.*" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.ArrayList" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="org.lightcouch.CouchDbException" %>
@@ -9,22 +10,44 @@
 <%
 	Date start_date = new SimpleDateFormat("dd/MM/yyyy").parse("20/09/2013");
 	Date end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse("25/09/2013 23:59:59");
+	String[] trends = new String[0];
+	String trends_string = "keyword1,keyword2,...";
 
 	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	SimpleDateFormat dateFormat2 = new SimpleDateFormat("dd/MM/yyyy");
 
-	List<TweetCount> counts;
+	List<TweetCount> counts_list;
+	List<KeywordsCount> keywordsCount_list;
 	//Access DB and retrive the count for everyday
 	CouchDB db = new CouchDB();
-			
+	
+	if(request.getParameter("trends") != null){
+		trends = request.getParameter("trends").split(",");
+
+		for(int i=0;i<trends.length;i++){
+			trends[i] = trends[i].trim();
+		}
+	}
+	
+	//Create String showning the list of keywords in Webform
+	if(trends.length != 0) {
+		trends_string = "";
+		for(int i=0;i<trends.length;i++) {
+			if(i==trends.length-1) trends_string = trends_string.concat(trends[i]);
+			else trends_string = trends_string.concat(trends[i] + ", ");
+		}
+	}
+	
+
 	if(request.getParameter("start_date") != null && request.getParameter("end_date") != null){
 		start_date = new SimpleDateFormat("dd/MM/yyyy").parse( request.getParameter("start_date") );
 		end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse( request.getParameter("end_date") + " 23:59:59");
-		counts = db.countDailyTweet(start_date, end_date);
+		counts_list = null;
+		keywordsCount_list = db.countDailyKeyword_effectively(trends, start_date, end_date);
 	}
 	else{
-		counts = db.countDailyTweet(start_date, end_date);
-		
+		counts_list = db.countDailyTweet(start_date, end_date);
+		keywordsCount_list = null;
 	}
 	
 %>
@@ -71,6 +94,13 @@
                             	<div class="span12">
                             		<form class="form-horizontal">
                                     	<fieldset>
+                                    		<div class="control-group">
+		                                          <label class="control-label" for="typeahead">Enter Trends </label>
+		                                          <div class="controls">
+		                                            <input type="text" name="trends" <%if(trends.length == 0){out.print("placeholder=\"" + trends_string + "\"");}else{out.print("value=\"" + trends_string + "\"");}%>>
+		                                            
+		                                          </div>
+		                                    </div>
 		                            		<div class="control-group">
 		                                          <label class="control-label" for="typeahead">Start Date </label>
 		                                          <div class="controls">
@@ -85,7 +115,7 @@
 		                                    </div>
 		                                    <div class="control-group">
 		                                          <div class="controls">
-		                                            <button type="submit" class="btn btn-primary">Submit</button>
+		                                            <button type="submit" class="btn btn-primary">Show Trends</button>
 		                                          </div>
 		                                    </div>
 		                                </fieldset>
@@ -166,28 +196,38 @@
         // Morris Line Chart
         var tax_data = [
                         <%
-                        for(int i=0;i<counts.size();i++){
-                        	TweetCount count = counts.get(i);
-                        	if(i!=counts.size()-1){
+                        if(keywordsCount_list!=null){
+	                        for(int i=0;i<keywordsCount_list.size();i++){
+	                        	KeywordsCount key_count = keywordsCount_list.get(i);
+	                        	String line = " {\"period\": \"" + dateFormat.format(key_count.getDate()) + "\", ";
+	                        	
+	                        	for(String keyword : trends){
+	                        		int value = key_count.getCount(keyword);
+	                        		line = line + "\"" + keyword + "\": "+ value + ", ";
+	                        	}
+	                        	line = line + "}, ";
+	                        	out.println(line);
+	                        }
+                        }
+                        	
+                        	/*if(i!=counts.size()-1){
                         		out.println(" {\"period\": \"" + dateFormat.format(count.getDate()) + "\", "  
                 						+ "\"tweets\": "+ count.getCount() +"},");
                         	}
                         	else{
                         		out.println(" {\"period\": \"" + dateFormat.format(count.getDate()) + "\", "  
-                						+ "\"tweets\": "+ count.getCount() +"}");
-                        	}
-                        }
+                						+ "\"tweets\": "+ count.getCount() +"},");
+                        	}*/
                        //for(TweetCount count : counts){
                         %>
-            
         ];
-        Morris.Line({
+        Morris.Area({
             element: 'hero-graph',
             data: tax_data,
             xkey: 'period',
             xLabels: "day",
-            ykeys: ['tweets'],
-            labels: ['Tweets', 'User signups']
+            ykeys: [<% for(String keyword : trends){ out.print("'"+ keyword +"',"); } %>],
+            labels: [<% for(String keyword : trends){ out.print("'"+ keyword +"',"); } %>]
         });
 
         

@@ -1,3 +1,69 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<%@ page import="SimpleCouchDB.*" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="org.lightcouch.CouchDbException" %>
+<%@ page import="org.joda.time.DateTime" %>
+<%@ page import="org.joda.time.Days" %>
+<%@ page import="org.joda.time.MutableDateTime" %>
+
+<%
+	int over_the_past = 2;
+
+	Date end_date = new Date();
+	Date start_date = (new DateTime(end_date)).minusDays(over_the_past).toDate();
+	
+	int topK = 5;
+
+	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	SimpleDateFormat dateFormat2 = new SimpleDateFormat("dd/MM/yyyy");
+
+	UserStatList list;
+	List<UserStat> top_positive_users;
+	List<UserStat> top_negative_users;
+	List<UserStat> top_neutral_users;
+	List<UserStat> top_frequent_users;
+	
+	List<TweetCount> tweetcount_list;
+	
+	TweetSentiment avg_sentiment;
+	
+	int countEnglishTweets = 0;
+	int countNonEnglishTweets = 0;
+	
+	//Access DB and retrive the count for everyday
+	CouchDB db = new CouchDB();
+	String c_filename = getServletContext().getRealPath("classifier/classifier.txt");
+			
+	if(request.getParameter("over_the_past") != null){
+		over_the_past = Integer.parseInt(request.getParameter("over_the_past"));
+		start_date = (new DateTime(end_date)).minusDays(over_the_past).toDate();
+	}
+	/*if(request.getParameter("top_k") != null){
+		topK = Integer.parseInt(request.getParameter("top_k"));
+	}*/
+	
+	//Users Ranking
+	list = db.getTopUser(c_filename, start_date, end_date);
+	top_positive_users = list.getListSortedByPos(topK);
+	top_negative_users = list.getListSortedByNeg(topK);
+	top_neutral_users = list.getListSortedByNeu(topK);
+	top_frequent_users = list.getListSortedByTotalTweet(topK);
+	
+	//Average Sentiment
+	avg_sentiment = db.getSentiment(c_filename, start_date, end_date);
+	
+	//The number of total tweet per day
+	tweetcount_list = db.countDailyTweet(start_date, end_date);
+	countEnglishTweets = db.countEnTweet(start_date, end_date);
+	countNonEnglishTweets = db.countNonEnTweet(start_date, end_date);
+	int percentEnTweet = (int)Math.round((double)countEnglishTweets/(double)avg_sentiment.countTotalTweets()*(double)100);
+	int percentNonEnTweet = (int)Math.round((double)countNonEnglishTweets/(double)avg_sentiment.countTotalTweets()*(double)100);
+	
+%>
+
 <!DOCTYPE html>
 <html class="no-js">
     
@@ -29,19 +95,29 @@
 	                        <div class="block">
 	                            <div class="navbar navbar-inner block-header">
 	                                <div class="muted pull-left">Tweet vs Retweet Gauge</div>
-	                                <div class="pull-right">Total Tweets <span class="badge badge-info">1,234</span></div>
+	                                <span class="pull-right">
+	                                	
+	                                	<span class="btn-group">
+											  <button data-toggle="dropdown" class="btn btn-primary dropdown-toggle">Past <%= over_the_past %> days<span class="caret"></span></button>
+											  <ul class="dropdown-menu">
+												<li><a href="index.jsp?over_the_past=2">Past 2 days</a></li>
+												<li><a href="index.jsp?over_the_past=4">Past 4 days</a></li>
+												<li><a href="index.jsp?over_the_past=7">Past 7 days</a></li>
+											  </ul>
+										</span><!-- /btn-group -->
+
+									</span>
 	                            </div>
 	                            <div class="block-content collapse in">
 	                                <div class="span5">
-	                                    <div class="easypiechart" data-percent="73">73%</div>
-	                                    <div class="chart-bottom-heading"><span class="label label-info">Retweet</span>
+	                                    <div class="easypiechart" data-percent="<%= percentEnTweet %>"><%= percentEnTweet %>%</div>
+	                                    <div class="chart-bottom-heading"><span class="label label-info">English</span>
 	
 	                                    </div>
 	                                </div>
 	                                <div class="span5">
-	                                    <div class="easypiechart" data-percent="53">53%</div>
-	                                    <div class="chart-bottom-heading"><span class="label label-info">Original</span>
-	
+	                                    <div class="easypiechart" data-percent="<%= percentNonEnTweet %>"><%= percentNonEnTweet %>%</div>
+	                                    <div class="chart-bottom-heading"><span class="label label-info">Non-English</span>
 	                                    </div>
 	                                </div>
 	                            </div>
@@ -51,33 +127,33 @@
                             <!-- block -->
 	                        <div class="block">
 	                            <div class="navbar navbar-inner block-header">
-	                                <div class="muted pull-left">From Date - To Date</div>
-	                                <div class="pull-right">Total Tweets <span class="badge badge-info">1,234</span></div>
+	                                <div class="muted pull-left">From <%= dateFormat2.format(start_date) %> - To <%= dateFormat2.format(end_date) %></div>
+	                                <div class="pull-right">Total Tweets <span class="badge badge-info"><%= avg_sentiment.countTotalTweets() %></span></div>
 	                            </div>
                                 <div class="block-content collapse in">
                                     <table class="table table-striped">
                                         <thead>
                                             <tr>
                                                 <th>Total Tweets</th>
-                                                <th>Number</th>
+                                                <th><%= avg_sentiment.countTotalTweets() %></th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td>Total Retweets</td>
-                                                <td>Number</td>
+                                                <td>Total English Tweets</td>
+                                                <td><%= countEnglishTweets %></td>
                                             </tr>
                                         </tbody>
                                         <tbody>
                                             <tr>
-                                                <td>Total Retweeters</td>
-                                                <td>Number</td>
+                                                <td>Total Non-English Tweeters</td>
+                                                <td><%= countNonEnglishTweets %></td>
                                             </tr>
                                         </tbody>
                                         <tbody>
                                             <tr>
                                                 <td>Tweeters Per day</td>
-                                                <td>Number</td>
+                                                <td><%= avg_sentiment.countTotalTweets()/over_the_past %></td>
                                             </tr>
                                         </tbody>                                        
                                     </table>
@@ -119,7 +195,7 @@
                                     </div>
                                 </div>
                                 <div class="block-content collapse in">
-                                <div class="span10 chart">
+                                <div class="span12 chart">
                                     <h5>Top influencers</h5>
                                     <div id="topFreq-bar" style="height: 250px;"></div>
                                 </div>
@@ -227,12 +303,13 @@
         Morris.Bar({
             element: 'hero-bar',
             data: [
-                {date: '04/08/2013', numOfTweet: 500},
-                {date: '04/09/2013', numOfTweet: 2000},
-                {date: '04/10/2013', numOfTweet: 800},
-                {date: '04/11/2013', numOfTweet: 400},
-                {date: '04/12/2013', numOfTweet: 500},
-                {date: '04/01/2014', numOfTweet: 1571}
+                   <%
+                   		for(TweetCount tweetcount : tweetcount_list){
+                   		 out.println("{date: '" + dateFormat2.format(tweetcount.getDate())
+							   		+ "', numOfTweet: " + tweetcount.getCount() + "},");
+                   		}
+                   %>
+                
             ],
             xkey: 'date',
             ykeys: ['numOfTweet'],
@@ -243,15 +320,29 @@
             barColors: ["#3d88ba"]
         });
         
-        // Morris Bar Chart
+        // Morris Donut Chart
+        Morris.Donut({
+            element: 'hero-donut',
+            data: [
+                {label: 'Happy', value: <%= avg_sentiment.getPositive() %> },
+                {label: 'Unhappy', value: <%= avg_sentiment.getNegative() %> },
+                {label: 'So-so', value: <%= avg_sentiment.getNeutral() %> }
+            ],
+            colors: ["#30a1ec", "#76bdee", "#c4dafe"],
+            formatter: function (y) { return Math.round(y*100/<%= avg_sentiment.countTotalTweets() %>) + "%" }
+        });
+        
+     	// Morris Bar Chart
         Morris.Bar({
             element: 'happy-bar',
             data: [
-                {userId: 'userId1', numOfTweet: 2000},
-                {userId: 'userId2', numOfTweet: 1800},
-                {userId: 'userId3', numOfTweet: 800},
-                {userId: 'userId4', numOfTweet: 400},
-                {userId: 'userId5', numOfTweet: 200}
+					<%	
+					for(UserStat user : top_positive_users){
+						   out.println("{userId: '" + user.getScreen_name() 
+							   		+ "', numOfTweet: " + user.getPositive_tweet() + "},");
+					}
+					
+					%>
             ],
             xkey: 'userId',
             ykeys: ['numOfTweet'],
@@ -260,30 +351,19 @@
             xLabelMargin: 10,
             hideHover: 'auto',
             barColors: ["#3d88ba"]
-        });      
-
-        
-        // Morris Donut Chart
-        Morris.Donut({
-            element: 'hero-donut',
-            data: [
-                {label: 'Happy', value: 50 },
-                {label: 'Unhappy', value: 40 },
-                {label: 'So-so', value: 10 }
-            ],
-            colors: ["#30a1ec", "#76bdee", "#c4dafe"],
-            formatter: function (y) { return y + "%" }
-        });
+        });  
         
         // Morris Bar Chart
         Morris.Bar({
             element: 'unhappy-bar',
             data: [
-                {userId: 'userId1', numOfTweet: 2000},
-                {userId: 'userId2', numOfTweet: 1800},
-                {userId: 'userId3', numOfTweet: 800},
-                {userId: 'userId4', numOfTweet: 400},
-                {userId: 'userId5', numOfTweet: 200}
+					<%	
+					for(UserStat user : top_negative_users){
+						   out.println("{userId: '" + user.getScreen_name() 
+							   		+ "', numOfTweet: " + user.getNegative_tweet() + "},");
+					}
+					
+					%>
             ],
             xkey: 'userId',
             ykeys: ['numOfTweet'],
@@ -298,11 +378,13 @@
         Morris.Bar({
             element: 'neutral-bar',
             data: [
-                {userId: 'userId1', numOfTweet: 2000},
-                {userId: 'userId2', numOfTweet: 1800},
-                {userId: 'userId3', numOfTweet: 800},
-                {userId: 'userId4', numOfTweet: 400},
-                {userId: 'userId5', numOfTweet: 200}
+					<%	
+					for(UserStat user : top_neutral_users){
+						   out.println("{userId: '" + user.getScreen_name() 
+							   		+ "', numOfTweet: " + user.getNeutral_tweet() + "},");
+					}
+					
+					%>
             ],
             xkey: 'userId',
             ykeys: ['numOfTweet'],
@@ -317,11 +399,13 @@
         Morris.Bar({
             element: 'topFreq-bar',
             data: [
-                {userId: 'userId1', numOfTweet: 2000},
-                {userId: 'userId2', numOfTweet: 1800},
-                {userId: 'userId3', numOfTweet: 800},
-                {userId: 'userId4', numOfTweet: 400},
-                {userId: 'userId5', numOfTweet: 200}
+                   <%	
+                   for(UserStat user : top_frequent_users){
+                	   out.println("{userId: '" + user.getScreen_name() 
+                		   		+ "', numOfTweet: " + user.getAll_tweet() + "},");
+                   }
+                   
+                   %>
             ],
             xkey: 'userId',
             ykeys: ['numOfTweet'],

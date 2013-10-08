@@ -1,10 +1,13 @@
 package SimpleCouchDB;
 
+import java.util.Date;
+
 public class TweetSentiment {
 	
 	private int neutral;
 	private int positive;
 	private int negative;
+	private Date date;
 	
 	public TweetSentiment(){
 		neutral = 0;
@@ -41,6 +44,14 @@ public class TweetSentiment {
 	}
 	public int countTotalTweets(){
 		return neutral + positive + negative;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
 	}
 	
 }

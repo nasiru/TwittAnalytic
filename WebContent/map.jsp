@@ -86,12 +86,12 @@
 	        var details = [
 						<%
 						for(TweetLocation location : locations){
-							out.println("\"<b><a href=trackuser.jsp?limit=50&user=" + location.getScreen_name() + ">" + location.getScreen_name() + "</a></b><p>" + location.getMessage()
+							/*out.println("\"<b><a href=trackuser.jsp?limit=50&user=" + location.getScreen_name() + ">" + location.getScreen_name() + "</a></b><p>" + location.getMessage()
 																							.replaceAll("\"", "") 
 																							.replaceAll(",", "")
 																							.replaceAll("'", "")
-																							+ "</p>\",");
-							//out.println("\"<b><a href=trackuser.jsp?=>" + location.getScreen_name() +"</a></b>\",");
+																							+ "</p>\",");*/
+							out.println("\"<b><a href=trackuser.jsp?=>" + location.getScreen_name() +"</a></b>\",");
 							//out.println("\"555\",");
 						}
 						

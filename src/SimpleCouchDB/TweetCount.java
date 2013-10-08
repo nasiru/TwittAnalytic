@@ -6,6 +6,7 @@ public class TweetCount {
 	
 	private Date date;
 	private int count;
+	private String keyword;
 	
 	public TweetCount(Date date, int count){
 		this.date = date;
@@ -24,6 +25,15 @@ public class TweetCount {
 	public void setCount(int count) {
 		this.count = count;
 	}
+
+	public String getKeyword() {
+		return keyword;
+	}
+
+	public void setKeyword(String keyword) {
+		this.keyword = keyword;
+	}
+	
 	
 
 }
