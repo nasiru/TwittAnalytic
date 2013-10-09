@@ -8,40 +8,31 @@
 <%@ page import="twitter4j.GeoLocation" %>
 
 <%
+	RectArea adelaid_city = new RectArea(new GeoLocation(-34.8130075199158, 138.70000000000005), 
+		new GeoLocation(-34.97030508204433, 138.4835205078125));
+	RectArea rural = new RectArea(new GeoLocation(-34.59172168044161, 139.11198730468755), 
+		new GeoLocation(-35.27582555470527, 138.412109375));
+
 	Date start_date = new SimpleDateFormat("dd/MM/yyyy").parse("24/09/2013");
-	Date end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse("25/09/2013 23:59:59");
+	Date end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse("30/09/2013 23:59:59");
 
 	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	SimpleDateFormat dateFormat2 = new SimpleDateFormat("dd/MM/yyyy");
 
-	RectArea rectangle = new RectArea(new GeoLocation(-34.8333,138.7),
-										new GeoLocation(-35.0333,138.5));
-	TweetSentiment sentiment;
+	List<TweetSentiment> sentiment_list_city;
+	List<TweetSentiment> sentiment_list_rural;
+	
 	//Access DB and retrive the count for everyday
 	CouchDB db = new CouchDB();
 	String c_filename = getServletContext().getRealPath("classifier/classifier.txt");
-	
-	//Get area of interest from parameter attached in the URL
-	if(request.getParameter("ne_lat") != null && request.getParameter("ne_lng") != null &&
-		request.getParameter("sw_lat") != null && request.getParameter("sw_lng") != null){
-		rectangle = new RectArea(new GeoLocation(
-										Double.parseDouble(request.getParameter("ne_lat")), 
-										Double.parseDouble(request.getParameter("ne_lng"))),
-								 new GeoLocation(
-										Double.parseDouble(request.getParameter("sw_lat")),
-										Double.parseDouble(request.getParameter("sw_lng")))
-								);
-	}
 			
 	if(request.getParameter("start_date") != null && request.getParameter("end_date") != null){
 		start_date = new SimpleDateFormat("dd/MM/yyyy").parse( request.getParameter("start_date") );
 		end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse( request.getParameter("end_date") + " 23:59:59");
-		sentiment = db.getSentiment(c_filename,rectangle,start_date, end_date);
-	}
-	else{
-		sentiment = db.getSentiment(c_filename,rectangle,start_date, end_date);
 		
 	}
+	sentiment_list_city = db.getDailySentiment(c_filename, adelaid_city, start_date, end_date);
+	sentiment_list_rural = db.getDailySentimentExclude(c_filename, rural, adelaid_city, start_date, end_date);
 	
 %>
 
@@ -51,7 +42,7 @@
 <html>
     
     <head>
-        <title>Sentiment Analysis</title>
+        <title>Sentiment Analysis (City and Rural area)</title>
         <!-- Bootstrap -->
         <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
         <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
@@ -69,8 +60,8 @@
 // This example adds a user-editable rectangle to the map.
 // When the user changes the bounds of the rectangle,
 // an info window pops up displaying the new bounds.
-var adelaid = new google.maps.LatLng(-34.9333, 138.6);
-var center_point = new google.maps.LatLng( <%= rectangle.getMiddlePoint().getLatitude() %>, <%= rectangle.getMiddlePoint().getLongitude() %>);
+var adelaid = new google.maps.LatLng(-34.8033, 138.6);
+var center_point = new google.maps.LatLng( <%= adelaid_city.getMiddlePoint().getLatitude()-0.1 %>, <%= adelaid_city.getMiddlePoint().getLongitude()+0.4 %>);
 
 var rectangle;
 var map;
@@ -79,32 +70,48 @@ var infoWindow;
 function initialize() {
   var mapOptions = {
     center: center_point,
-    zoom: 9,
+    zoom: 8,
     mapTypeId: google.maps.MapTypeId.ROADMAP
   };
   map = new google.maps.Map(document.getElementById('map-canvas-small'),
       mapOptions);
 
-  var bounds = new google.maps.LatLngBounds(
-	  new google.maps.LatLng(<%= rectangle.getSouth_west().getLatitude() %>, <%= rectangle.getSouth_west().getLongitude() %>),
-      new google.maps.LatLng(<%= rectangle.getNorth_east().getLatitude() %>, <%= rectangle.getNorth_east().getLongitude() %>)
+  var bounds_city = new google.maps.LatLngBounds(
+	  new google.maps.LatLng(<%= adelaid_city.getSouth_west().getLatitude() %>, <%= adelaid_city.getSouth_west().getLongitude() %>),
+      new google.maps.LatLng(<%= adelaid_city.getNorth_east().getLatitude() %>, <%= adelaid_city.getNorth_east().getLongitude() %>)
   );
+  
+  var bounds_rural = new google.maps.LatLngBounds(
+		  new google.maps.LatLng(<%= rural.getSouth_west().getLatitude() %>, <%= rural.getSouth_west().getLongitude() %>),
+	      new google.maps.LatLng(<%= rural.getNorth_east().getLatitude() %>, <%= rural.getNorth_east().getLongitude() %>)
+	  );
 
   // Define the rectangle and set its editable property to true.
-  rectangle = new google.maps.Rectangle({
-    bounds: bounds,
+  rectangle_city = new google.maps.Rectangle({
+    bounds: bounds_city,
     strokeColor: '#FF0000',
     strokeWeight: 0.5,
     fillColor: '#FF0000',
-    fillOpacity: 0.2,
-    editable: true,
-    draggable: true
+    fillOpacity: 0.5,
+    editable: false,
+    draggable: false
   });
-
-  rectangle.setMap(map);
+  
+  rectangle_rural = new google.maps.Rectangle({
+	    bounds: bounds_rural,
+	    strokeColor: '#0000FF',
+	    strokeWeight: 0.5,
+	    fillColor: '#0000FF',
+	    fillOpacity: 0.2,
+	    editable: false,
+	    draggable: false
+	  });
+  rectangle_city.setMap(map);
+  rectangle_rural.setMap(map);
+  
 
   // Add an event listener on the rectangle.
-  google.maps.event.addListener(rectangle, 'bounds_changed', showNewRect);
+  google.maps.event.addListener(rectangle1, 'bounds_changed', showNewRect);
 
   // Define an info window on the map.
   infoWindow = new google.maps.InfoWindow();
@@ -172,53 +179,41 @@ google.maps.event.addDomListener(window, 'load', initialize);
 		                                            <input type="text" class="datepicker" id="date02" name="end_date" value="<%= dateFormat2.format(end_date) %>">
 		                                          </div>
 		                                    </div>                           
-		                                    <div class="control-group">
-		                                          <label class="control-label" for="typeahead">Select Area </label>
+		                                    <div class="control-group">                   
 		                                          <div class="controls">
 		                                            <div id="map-canvas-small"></div>
+		                                            <span class="label label-info">Blue</span> = Rural and <span class="label label-important">Red</span> = City
 		                                          </div>
-		                                    </div>
-		                                    <div class="control-group">
-		                                          <label class="control-label" for="typeahead">NE Position </label>
-		                                          <div class="controls">
-		                                             <input class="input disabled" name="ne_lat" id="ne_lat" type="text" value="<%= rectangle.getNorth_east().getLatitude() %>" readonly>
-		                                          	 <input class="input disabled" name="ne_lng" id="ne_lng" type="text" value="<%= rectangle.getNorth_east().getLongitude() %>" readonly>
-		                                          </div>
-		                                    </div>
-		                                    <div class="control-group">
-		                                          <label class="control-label" for="typeahead">SW Position </label>
-		                                          <div class="controls">
-		                                             <input class="input disabled" name="sw_lat" id="sw_lat" type="text" value="<%= rectangle.getSouth_west().getLatitude() %>" readonly>
-		                                          	 <input class="input disabled" name="sw_lng" id="sw_lng" type="text" value="<%= rectangle.getSouth_west().getLongitude() %>" readonly></div>
-		                                    </div>
-		                                   
+		                                    </div>                        
 		                                    
 		                                    <div class="control-group">
 		                                          <div class="controls">
 		                                            <button type="submit" class="btn btn-primary">Submit</button>
 		                                          </div>
 		                                    </div>
+		                                    
 		                                </fieldset>
 		                            </form>
 		                        </div>
-		                        <div class="span6 chart">
-                                    <h5>Sentiment(Pie Chart)</h5>
-                                    <div id="piechart1" style="width:100%;height:200px"></div>
+		                        
+		                        <div class="span12">
+		                        	<h4>Positive Tweets</h4>
+                                    <div id="positive-graph" style="height: 300px;"></div>
                                 </div>
-                                <div class="span5 chart">
-                                    <h5>Sentiment(Bar)</h5>
-                                    <div id="hero-bar" style="width:100%;height:200px"></div>
+                                <div class="span12">
+		                        	<h4>Negative Tweets</h4>
+                                    <div id="negative-graph" style="height: 300px;"></div>
                                 </div>
-                                
-                            
+                                <div class="span12">
+		                        	<h4>Neutral Tweets</h4>
+                                    <div id="neutral-graph" style="height: 300px;"></div>
+                                </div>
 
                             </div>
                         </div>
                         <!-- /block -->
                     </div>
-
                     
-
                 </div>
             </div>
             <hr>
@@ -278,57 +273,78 @@ google.maps.event.addDomListener(window, 'load', initialize);
         });
         </script>
         <script>
-        var data1 = [{label: "Positive", data: <%= sentiment.getPositive() %>},
-                     {label: "Negative", data: <%= sentiment.getNegative() %>},
-                     {label: "Neutral", data: <%= sentiment.getNeutral() %>}]
-
-        $.plot('#piechart1', data1, {
-            series: {
-                pie: { 
-                    show: true,
-                    radius: 1,
-                    label: {
-                        show: true,
-                        radius: 3/4,
-                        formatter: labelFormatter,
-                        background: { 
-                            opacity: 0.5,
-                            color: '#000'
+        var positive_data = [
+                        <%
+                        if(sentiment_list_city!=null){
+	                        for(int i=0;i<sentiment_list_city.size();i++){
+	                        	TweetSentiment sentiment_city = sentiment_list_city.get(i);
+	                        	TweetSentiment sentiment_rural = sentiment_list_rural.get(i);
+	                        	String line = " {\"period\": \"" + dateFormat.format(sentiment_city.getDate()) + "\", ";
+	                        	line = line + "\"city\": "+ sentiment_city.getPositive() + ", ";
+	                        	line = line + "\"rural\": " + sentiment_rural.getPositive();
+	                        	line = line + "}, ";
+	                        	out.println(line);
+	                        }
                         }
-                    }
-                }
-            },
-            legend: {
-                show: false
-            }
-        });
-
-        function labelFormatter(label, series) {
-            return "<div style='font-size:8pt; text-align:center; padding:2px; color:white;'>" + label + "<br/>" + Math.round(series.percent) + "%</div>";
-        }
-        
-        
-     // Morris Bar Chart
-        Morris.Bar({
-            element: 'hero-bar',
-            data: [
-                {feedback: 'Pos+', counts: <%= sentiment.getPositive()  %>},
-                {feedback: 'Neg-', counts: <%= sentiment.getNegative()  %>},
-                {feedback: 'Neutral', counts: <%= sentiment.getNeutral()  %>},
-            ],
-            xkey: 'feedback',
-            ykeys: ['counts'],
-            labels: ['Sentiment'],
-            barRatio: 0.4,
-            xLabelMargin: 10,
-            hideHover: 'auto',
-            barColors: ["#3d88ba"]
-        });
-        
-        var tax_data = [
-
-            
+                        %>
         ];
+        var negative_data = [
+                             <%
+                             if(sentiment_list_city!=null){
+     	                        for(int i=0;i<sentiment_list_city.size();i++){
+     	                        	TweetSentiment sentiment_city = sentiment_list_city.get(i);
+     	                        	TweetSentiment sentiment_rural = sentiment_list_rural.get(i);
+     	                        	String line = " {\"period\": \"" + dateFormat.format(sentiment_city.getDate()) + "\", ";
+     	                        	line = line + "\"city\": "+ sentiment_city.getNegative() + ", ";
+     	                        	line = line + "\"rural\": " + sentiment_rural.getNegative();
+     	                        	line = line + "}, ";
+     	                        	out.println(line);
+     	                        }
+                             }
+                             %>
+             ];
+        var neutral_data = [
+                             <%
+                             if(sentiment_list_city!=null){
+     	                        for(int i=0;i<sentiment_list_city.size();i++){
+     	                        	TweetSentiment sentiment_city = sentiment_list_city.get(i);
+     	                        	TweetSentiment sentiment_rural = sentiment_list_rural.get(i);
+     	                        	String line = " {\"period\": \"" + dateFormat.format(sentiment_city.getDate()) + "\", ";
+     	                        	line = line + "\"city\": "+ sentiment_city.getNeutral() + ", ";
+     	                        	line = line + "\"rural\": " + sentiment_rural.getNeutral();
+     	                        	line = line + "}, ";
+     	                        	out.println(line);
+     	                        }
+                             }
+                             %>
+             ];
+        
+        
+        
+        Morris.Line({
+            element: 'positive-graph',
+            data: positive_data,
+            xkey: 'period',
+            xLabels: "day",
+            ykeys: ['city','rural'],
+            labels: ['city','rural']
+        });
+        Morris.Line({
+            element: 'negative-graph',
+            data: negative_data,
+            xkey: 'period',
+            xLabels: "day",
+            ykeys: ['city','rural'],
+            labels: ['city','rural']
+        });
+        Morris.Line({
+            element: 'neutral-graph',
+            data: neutral_data,
+            xkey: 'period',
+            xLabels: "day",
+            ykeys: ['city','rural'],
+            labels: ['city','rural']
+        });
         
         
         </script>

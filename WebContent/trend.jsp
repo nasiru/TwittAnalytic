@@ -58,7 +58,7 @@
 <html>
     
     <head>
-        <title>Statistics</title>
+        <title>Trends</title>
         <!-- Bootstrap -->
         <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
         <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
@@ -135,9 +135,7 @@
                 </div>
             </div>
             <hr>
-            <footer>
-                <p>&copy; Vincent Gabriel 2013</p>
-            </footer>
+            <%@ include file="footer.jsp" %>
         </div>
         <!--/.fluid-container-->
         <link rel="stylesheet" href="vendors/morris/morris.css">
@@ -209,16 +207,6 @@
 	                        	out.println(line);
 	                        }
                         }
-                        	
-                        	/*if(i!=counts.size()-1){
-                        		out.println(" {\"period\": \"" + dateFormat.format(count.getDate()) + "\", "  
-                						+ "\"tweets\": "+ count.getCount() +"},");
-                        	}
-                        	else{
-                        		out.println(" {\"period\": \"" + dateFormat.format(count.getDate()) + "\", "  
-                						+ "\"tweets\": "+ count.getCount() +"},");
-                        	}*/
-                       //for(TweetCount count : counts){
                         %>
         ];
         Morris.Area({

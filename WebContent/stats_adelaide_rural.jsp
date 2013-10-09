@@ -42,7 +42,7 @@
 <html class="no-js">
     
     <head>
-        <title>Stats Sample</title>
+        <title>Statistic (City and Rural area)</title>
         <!-- Bootstrap -->
         <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
         <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
@@ -53,6 +53,97 @@
             <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
         <script src="vendors/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+        
+        <script type="text/javascript"
+      		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAe8RpD7yqP4R_68vC94uPNXWYgxiWVm_o&sensor=false">
+    	</script>
+        <script>
+// This example adds a user-editable rectangle to the map.
+// When the user changes the bounds of the rectangle,
+// an info window pops up displaying the new bounds.
+var adelaid = new google.maps.LatLng(-34.8033, 138.6);
+var center_point = new google.maps.LatLng( <%= adelaid_city.getMiddlePoint().getLatitude()-0.1 %>, <%= adelaid_city.getMiddlePoint().getLongitude()+0.4 %>);
+
+var rectangle;
+var map;
+var infoWindow;
+
+function initialize() {
+  var mapOptions = {
+    center: center_point,
+    zoom: 8,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  };
+  map = new google.maps.Map(document.getElementById('map-canvas-small'),
+      mapOptions);
+
+  var bounds_city = new google.maps.LatLngBounds(
+	  new google.maps.LatLng(<%= adelaid_city.getSouth_west().getLatitude() %>, <%= adelaid_city.getSouth_west().getLongitude() %>),
+      new google.maps.LatLng(<%= adelaid_city.getNorth_east().getLatitude() %>, <%= adelaid_city.getNorth_east().getLongitude() %>)
+  );
+  
+  var bounds_rural = new google.maps.LatLngBounds(
+		  new google.maps.LatLng(<%= rural.getSouth_west().getLatitude() %>, <%= rural.getSouth_west().getLongitude() %>),
+	      new google.maps.LatLng(<%= rural.getNorth_east().getLatitude() %>, <%= rural.getNorth_east().getLongitude() %>)
+	  );
+
+  // Define the rectangle and set its editable property to true.
+  rectangle_city = new google.maps.Rectangle({
+    bounds: bounds_city,
+    strokeColor: '#FF0000',
+    strokeWeight: 0.5,
+    fillColor: '#FF0000',
+    fillOpacity: 0.5,
+    editable: false,
+    draggable: false
+  });
+  
+  rectangle_rural = new google.maps.Rectangle({
+	    bounds: bounds_rural,
+	    strokeColor: '#0000FF',
+	    strokeWeight: 0.5,
+	    fillColor: '#0000FF',
+	    fillOpacity: 0.2,
+	    editable: false,
+	    draggable: false
+	  });
+  rectangle_city.setMap(map);
+  rectangle_rural.setMap(map);
+  
+
+  // Add an event listener on the rectangle.
+  google.maps.event.addListener(rectangle1, 'bounds_changed', showNewRect);
+
+  // Define an info window on the map.
+  infoWindow = new google.maps.InfoWindow();
+}
+// Show the new coordinates for the rectangle in an info window.
+
+/** @this {google.maps.Rectangle} */
+function showNewRect(event) {
+  var ne = rectangle.getBounds().getNorthEast();
+  var sw = rectangle.getBounds().getSouthWest();
+  
+  document.getElementById("ne_lat").value = ne.lat();
+  document.getElementById("ne_lng").value = ne.lng();
+  document.getElementById("sw_lat").value = sw.lat();
+  document.getElementById("sw_lng").value = sw.lng();
+
+  /*var contentString = '<b>Rectangle moved.</b><br>' +
+      'New north-east corner: ' + ne.lat() + ', ' + ne.lng() + '<br>' +
+      'New south-west corner: ' + sw.lat() + ', ' + sw.lng();*/
+
+  // Set the info window's content and position.
+  //infoWindow.setContent(contentString);
+  //infoWindow.setPosition(ne);
+
+  //infoWindow.open(map);
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+        
     </head>
     
     <body>
@@ -87,6 +178,12 @@
 		                                          <label class="control-label" for="typeahead">End Date </label>
 		                                          <div class="controls">
 		                                            <input type="text" class="datepicker" id="date02" name="end_date" value="<%= dateFormat2.format(end_date) %>">
+		                                          </div>
+		                                    </div>
+		                                    <div class="control-group">                   
+		                                          <div class="controls">
+		                                            <div id="map-canvas-small"></div>
+		                                            <span class="label label-info">Blue</span> = Rural and <span class="label label-important">Red</span> = City
 		                                          </div>
 		                                    </div>
 		                                    <div class="control-group">
@@ -151,9 +248,7 @@
                 </div>
             </div>
             <hr>
-            <footer>
-                <p>Big Data Cracker Team 2013</p>
-            </footer>
+            <%@ include file="footer.jsp" %>
         </div>
         <!--/.fluid-container-->
         <link rel="stylesheet" href="vendors/morris/morris.css">
@@ -171,11 +266,14 @@
         <script src="vendors/flot/jquery.flot.time.js"></script>
         <script src="vendors/flot/jquery.flot.stack.js"></script>
         <script src="vendors/flot/jquery.flot.resize.js"></script>
+        
+        <link href="vendors/datepicker.css" rel="stylesheet" media="screen">
+        <script src="vendors/bootstrap-datepicker.js"></script>
 
         <script src="assets/scripts.js"></script>
         <script>
         $(function() {
-                     
+        	$(".datepicker").datepicker();         
             // Morris Bar Chart
             Morris.Bar({
                 element: 'city-bar',

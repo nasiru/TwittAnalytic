@@ -52,7 +52,7 @@
 <html>
     
     <head>
-        <title>Admin Home Page</title>
+        <title>Tweets Location on Google Map</title>
         <!-- Bootstrap -->
         <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
         <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
@@ -86,12 +86,13 @@
 	        var details = [
 						<%
 						for(TweetLocation location : locations){
-							/*out.println("\"<b><a href=trackuser.jsp?limit=50&user=" + location.getScreen_name() + ">" + location.getScreen_name() + "</a></b><p>" + location.getMessage()
+							out.println("\"<b><a href=trackuser.jsp?limit=50&user=" + location.getScreen_name() + ">" + location.getScreen_name() + "</a></b><p>" + location.getMessage()
 																							.replaceAll("\"", "") 
 																							.replaceAll(",", "")
 																							.replaceAll("'", "")
-																							+ "</p>\",");*/
-							out.println("\"<b><a href=trackuser.jsp?=>" + location.getScreen_name() +"</a></b>\",");
+																							.replaceAll("[^ A-Za-z0-9]", "")
+																							+ "</p>\",");
+							//out.println("\"<b><a href=trackuser.jsp?=>" + location.getScreen_name() +"</a></b>\",");
 							//out.println("\"555\",");
 						}
 						
@@ -275,9 +276,7 @@
                 </div>
             </div>
             <hr>
-            <footer>
-                <p>&copy; Vincent Gabriel 2013</p>
-            </footer>
+            <%@ include file="footer.jsp" %>
         </div>
         
         <!--/.fluid-container-->

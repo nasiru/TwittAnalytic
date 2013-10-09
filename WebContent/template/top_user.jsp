@@ -5,8 +5,12 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="org.lightcouch.CouchDbException" %>
+<%@ page import="twitter4j.GeoLocation" %>
 
 <%
+	RectArea adelaid_city = new RectArea(new GeoLocation(-34.8130075199158, 138.70000000000005), 
+		new GeoLocation(-34.97030508204433, 138.4835205078125));
+
 	Date start_date = new SimpleDateFormat("dd/MM/yyyy").parse("20/09/2013");
 	Date end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse("25/09/2013 23:59:59");
 	int topK = 10;
@@ -32,7 +36,7 @@
 		topK = Integer.parseInt(request.getParameter("top_k"));
 	}
 	
-	list = db.getTopUser(c_filename, start_date, end_date);
+	list = db.getTopUser(c_filename, adelaid_city, start_date, end_date);
 	top_positive_users = list.getListSortedByPos(topK);
 	top_negative_users = list.getListSortedByNeg(topK);
 	top_neutral_users = list.getListSortedByNeu(topK);
@@ -268,9 +272,7 @@
                 </div>
             </div>
             <hr>
-            <footer>
-                <p>&copy; Vincent Gabriel 2013</p>
-            </footer>
+            <%@ include file="footer.jsp" %>
         </div>
         <!--/.fluid-container-->
 

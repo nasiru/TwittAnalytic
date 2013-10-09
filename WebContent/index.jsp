@@ -8,13 +8,16 @@
 <%@ page import="org.joda.time.DateTime" %>
 <%@ page import="org.joda.time.Days" %>
 <%@ page import="org.joda.time.MutableDateTime" %>
+<%@ page import="twitter4j.GeoLocation" %>
 
 <%
-	int over_the_past = 2;
+	RectArea adelaid_city = new RectArea(new GeoLocation(-34.8130075199158, 138.70000000000005), 
+		new GeoLocation(-34.97030508204433, 138.4835205078125));
 
-	Date end_date = new Date();
-	Date start_date = (new DateTime(end_date)).minusDays(over_the_past).toDate();
-	
+	Date start_date = new SimpleDateFormat("dd/MM/yyyy").parse("23/09/2013");
+	Date end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse("25/09/2013 23:59:59");
+	int day_between;
+
 	int topK = 5;
 
 	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -37,16 +40,13 @@
 	CouchDB db = new CouchDB();
 	String c_filename = getServletContext().getRealPath("classifier/classifier.txt");
 			
-	if(request.getParameter("over_the_past") != null){
-		over_the_past = Integer.parseInt(request.getParameter("over_the_past"));
-		start_date = (new DateTime(end_date)).minusDays(over_the_past).toDate();
+	if(request.getParameter("start_date") != null && request.getParameter("end_date") != null){
+		start_date = new SimpleDateFormat("dd/MM/yyyy").parse( request.getParameter("start_date") );
+		end_date = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse( request.getParameter("end_date") + " 23:59:59");
 	}
-	/*if(request.getParameter("top_k") != null){
-		topK = Integer.parseInt(request.getParameter("top_k"));
-	}*/
-	
+	day_between = Days.daysBetween(new DateTime(start_date), new DateTime(end_date)).getDays();
 	//Users Ranking
-	list = db.getTopUser(c_filename, start_date, end_date);
+	list = db.getTopUser(c_filename, adelaid_city, start_date, end_date);
 	top_positive_users = list.getListSortedByPos(topK);
 	top_negative_users = list.getListSortedByNeg(topK);
 	top_neutral_users = list.getListSortedByNeu(topK);
@@ -54,7 +54,7 @@
 	
 	//Average Sentiment
 	avg_sentiment = db.getSentiment(c_filename, start_date, end_date);
-	
+
 	//The number of total tweet per day
 	tweetcount_list = db.countDailyTweet(start_date, end_date);
 	countEnglishTweets = db.countEnTweet(start_date, end_date);
@@ -89,24 +89,52 @@
                 
                 <!--/span-->
                 <div class="span9" id="content">
+                	<div class="row-fluid section">
+                         <!-- block -->
+                        <div class="block">
+                            <div class="navbar navbar-inner block-header">
+                                <div class="muted pull-left">The number of tweets <small>(over the time)</small></div>
+                                <div class="pull-right"><span class="badge badge-warning">View More</span>
+
+                                </div>
+                            </div>
+                            <div class="block-content collapse in">
+                            
+                            	<div class="span12">
+                            		<form class="form-horizontal">
+                                    	<fieldset>
+		                            		<div class="control-group">
+		                                          <label class="control-label" for="typeahead">Start Date </label>
+		                                          <div class="controls">
+		                                            <input type="text" class="datepicker" id="date01" name="start_date" value="<%= dateFormat2.format(start_date) %>">
+		                                          </div>
+		                                    </div>
+		                                    <div class="control-group">
+		                                          <label class="control-label" for="typeahead">End Date </label>
+		                                          <div class="controls">
+		                                            <input type="text" class="datepicker" id="date02" name="end_date" value="<%= dateFormat2.format(end_date) %>">
+		                                          </div>
+		                                    </div>
+		                                    <div class="control-group">
+		                                          <div class="controls">
+		                                            <button type="submit" class="btn btn-primary">Show Trends</button>
+		                                          </div>
+		                                    </div>
+		                                </fieldset>
+		                            </form>
+		                        </div>
+                            </div>
+                        </div>
+                        <!-- /block -->
+                    </div>
+                
+                
                     <div class="row-fluid">
                         <div class="span6">
                             <!-- block -->
 	                        <div class="block">
 	                            <div class="navbar navbar-inner block-header">
 	                                <div class="muted pull-left">Tweet vs Retweet Gauge</div>
-	                                <span class="pull-right">
-	                                	
-	                                	<span class="btn-group">
-											  <button data-toggle="dropdown" class="btn btn-primary dropdown-toggle">Past <%= over_the_past %> days<span class="caret"></span></button>
-											  <ul class="dropdown-menu">
-												<li><a href="index.jsp?over_the_past=2">Past 2 days</a></li>
-												<li><a href="index.jsp?over_the_past=4">Past 4 days</a></li>
-												<li><a href="index.jsp?over_the_past=7">Past 7 days</a></li>
-											  </ul>
-										</span><!-- /btn-group -->
-
-									</span>
 	                            </div>
 	                            <div class="block-content collapse in">
 	                                <div class="span5">
@@ -153,7 +181,7 @@
                                         <tbody>
                                             <tr>
                                                 <td>Tweeters Per day</td>
-                                                <td><%= avg_sentiment.countTotalTweets()/over_the_past %></td>
+                                                <td><%= avg_sentiment.countTotalTweets()/day_between %></td>
                                             </tr>
                                         </tbody>                                        
                                     </table>
@@ -190,15 +218,33 @@
                             <div class="block">
                                 <div class="navbar navbar-inner block-header">
                                     <div class="muted pull-left">Top 5 Frequent Users</div>
-                                    <div class="pull-right"><span class="badge badge-info">1,234</span>
-
-                                    </div>
                                 </div>
                                 <div class="block-content collapse in">
                                 <div class="span12 chart">
                                     <h5>Top influencers</h5>
                                     <div id="topFreq-bar" style="height: 250px;"></div>
                                 </div>
+                                </div>
+                                 <div class="block-content collapse in">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Ranking</th>
+                                                <th>Screen Name</th>
+                                                <th>Link</th>
+                                            </tr>
+                                        </thead>
+                                        <% for(int i=0;i<top_frequent_users.size();i++){
+                                        	UserStat stat = top_frequent_users.get(i);%>
+                                        <tbody>
+                                            <tr>
+                                                <td><%= i+1 %></td>
+                                                <td><%= stat.getScreen_name() %></td>
+                                                <td><a href="trackuser.jsp?limit=50&user=<%= stat.getScreen_name() %>"><span class="badge badge-warning">Trace User In Map</span></a></td>
+                                            </tr>
+                                        </tbody>
+                                        <%} %>                                   
+                                    </table>
                                 </div>
                             </div>
                             <!-- /block -->
@@ -208,15 +254,33 @@
                             <div class="block">
                                 <div class="navbar navbar-inner block-header">
                                     <div class="muted pull-left">Top 5 so-so users</div>
-                                    <div class="pull-right"><span class="badge badge-info">752</span>
-
-                                    </div>
                                 </div>
                                 <div class="block-content collapse in">
                                 <div class="span10 chart">
                                     <h5>People dont bother a lot</h5>
                                     <div id="neutral-bar" style="height: 250px;"></div>
                                 </div>
+                                </div>
+                                <div class="block-content collapse in">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Ranking</th>
+                                                <th>Screen Name</th>
+                                                <th>Link</th>
+                                            </tr>
+                                        </thead>
+                                        <% for(int i=0;i<top_neutral_users.size();i++){
+                                        	UserStat stat = top_neutral_users.get(i);%>
+                                        <tbody>
+                                            <tr>
+                                                <td><%= i+1 %></td>
+                                                <td><%= stat.getScreen_name() %></td>
+                                                <td><a href="trackuser.jsp?limit=50&user=<%= stat.getScreen_name() %>"><span class="badge badge-warning">Trace User In Map</span></a></td>
+                                            </tr>
+                                        </tbody>
+                                        <%} %>                                   
+                                    </table>
                                 </div>
                             </div>
                             <!-- /block -->
@@ -228,15 +292,33 @@
                             <div class="block">
                                 <div class="navbar navbar-inner block-header">
                                     <div class="muted pull-left">Top 5 Unhappy Users</div>
-                                    <div class="pull-right"><span class="badge badge-warning">Trace Them In Map</span>
-
-                                    </div>
                                 </div>
                                 <div class="block-content collapse in">
                                 <div class="span10 chart">
                                     <h5>People takes life events as negetive</h5>
                                     <div id="unhappy-bar" style="height: 250px;"></div>
                                 </div>
+                                </div>
+                                <div class="block-content collapse in">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Ranking</th>
+                                                <th>Screen Name</th>
+                                                <th>Link</th>
+                                            </tr>
+                                        </thead>
+                                        <% for(int i=0;i<top_negative_users.size();i++){
+                                        	UserStat stat = top_negative_users.get(i);%>
+                                        <tbody>
+                                            <tr>
+                                                <td><%= i+1 %></td>
+                                                <td><%= stat.getScreen_name() %></td>
+                                                <td><a href="trackuser.jsp?limit=50&user=<%= stat.getScreen_name() %>"><span class="badge badge-warning">Trace User In Map</span></a></td>
+                                            </tr>
+                                        </tbody>
+                                        <%} %>                                   
+                                    </table>
                                 </div>
                             </div>
                             <!-- /block -->
@@ -246,15 +328,33 @@
                             <div class="block">
                                 <div class="navbar navbar-inner block-header">
                                     <div class="muted pull-left">Top 5 Happy users</div>
-                                    <div class="pull-right"><span class="badge badge-warning">Trace Them In Map</span>
-
-                                    </div>
                                 </div>
                                 <div class="block-content collapse in">
                                 <div class="span10 chart">
                                     <h5>People takes life events as positive</h5>
                                     <div id="happy-bar" style="height: 250px;"></div>
                                 </div>
+                                </div>
+                                <div class="block-content collapse in">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Ranking</th>
+                                                <th>Screen Name</th>
+                                                <th>Link</th>
+                                            </tr>
+                                        </thead>
+                                        <% for(int i=0;i<top_positive_users.size();i++){
+                                        	UserStat stat = top_positive_users.get(i);%>
+                                        <tbody>
+                                            <tr>
+                                                <td><%= i+1 %></td>
+                                                <td><%= stat.getScreen_name() %></td>
+                                                <td><a href="trackuser.jsp?limit=50&user=<%= stat.getScreen_name() %>"><span class="badge badge-warning">Trace User In Map</span></a></td>
+                                            </tr>
+                                        </tbody>
+                                        <%} %>                                   
+                                    </table>
                                 </div>
                             </div>
                             <!-- /block -->
@@ -264,21 +364,22 @@
                 </div>
             </div>
             <hr>
-            <footer>
-                <p>Big Data Analytic Project 2013</p>
-            </footer>
+            <%@ include file="footer.jsp" %>
         </div>
         <!--/.fluid-container-->
-       
+        <link href="vendors/uniform.default.css" rel="stylesheet" media="screen">
+        <link href="vendors/chosen.min.css" rel="stylesheet" media="screen">
+        <link href="vendors/datepicker.css" rel="stylesheet" media="screen">
+        
         <script src="vendors/jquery-1.9.1.min.js"></script>
         <script src="vendors/easypiechart/jquery.easy-pie-chart.js"></script>
         <script src="vendors/jquery.knob.js"></script>
-
+		
         <link rel="stylesheet" href="vendors/morris/morris.css">
         <script src="vendors/raphael-min.js"></script>
         <script src="vendors/morris/morris.min.js"></script>
 
-
+		<script src="vendors/bootstrap-datepicker.js"></script>
         <script src="bootstrap/js/bootstrap.min.js"></script>
         <script src="vendors/flot/jquery.flot.js"></script>
         <script src="vendors/flot/jquery.flot.categories.js"></script>
@@ -292,7 +393,7 @@
 
         <script>
         $(function() {
-            
+          $(".datepicker").datepicker();
           // Easy pie charts
           $('.easypiechart').easyPieChart({animate: 1000});
           
