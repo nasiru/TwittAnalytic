@@ -12,6 +12,21 @@ import twitter4j.conf.ConfigurationBuilder;
 import twitter4j.json.DataObjectFactory;
 import com.google.gson.JsonObject;
 
+/**
+
+Uses the Twitter Search API to retrieve the tweet history of Adelaide users 
+harvested from the Stream API
+
+Team 1 - Adelaide
+Erick Thomas Gaspar (527823)
+Nasir Uddin (558747)
+Mohamad Ilhamy Putra (595179)
+Prapon Chaimuttayompol (575141)
+Chi Wang (523312)
+
+
+*/
+
 public class TwitSearchOrdos {
 
 	/**
