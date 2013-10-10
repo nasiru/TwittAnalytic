@@ -2,6 +2,20 @@ package SimpleCouchDB;
 
 import au.edu.unimelb.twitterSearch.SentimentClassifier;
 
+/**
+
+Correlates users with their geolocation
+
+Team 1 - Adelaide
+Erick Thomas Gaspar (527823)
+Nasir Uddin (558747)
+Mohamad Ilhamy Putra (595179)
+Prapon Chaimuttayompol (575141)
+Chi Wang (523312)
+
+
+*/
+
 public class TweetLocation {
 
 	private String id;

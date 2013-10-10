@@ -1,6 +1,20 @@
 package SimpleCouchDB;
 import twitter4j.GeoLocation;
 
+/**
+
+Bounding box code for geospatial analysis
+
+Team 1 - Adelaide
+Erick Thomas Gaspar (527823)
+Nasir Uddin (558747)
+Mohamad Ilhamy Putra (595179)
+Prapon Chaimuttayompol (575141)
+Chi Wang (523312)
+
+
+*/
+
 public class RectArea {
 
 	private GeoLocation north_east;

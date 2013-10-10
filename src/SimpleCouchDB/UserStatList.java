@@ -5,6 +5,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+
+Manages top users for a particular sentiment
+
+Team 1 - Adelaide
+Erick Thomas Gaspar (527823)
+Nasir Uddin (558747)
+Mohamad Ilhamy Putra (595179)
+Prapon Chaimuttayompol (575141)
+Chi Wang (523312)
+
+
+*/
 public class UserStatList {
 	
 	private Map<String, UserStat> usersStatTable;

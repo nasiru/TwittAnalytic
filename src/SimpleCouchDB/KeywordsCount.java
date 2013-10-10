@@ -4,6 +4,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+
+Used to maintain statistics for a particular keyword or phrase
+
+Team 1 - Adelaide
+Erick Thomas Gaspar (527823)
+Nasir Uddin (558747)
+Mohamad Ilhamy Putra (595179)
+Prapon Chaimuttayompol (575141)
+Chi Wang (523312)
+
+
+*/
+
 public class KeywordsCount {
 	
 	private Date date;

@@ -32,6 +32,20 @@ import au.edu.unimelb.twitterSearch.SentimentClassifier;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+/**
+
+Contains the domain logic and View rendering code to be used by the front 
+facing JSP pages.
+
+Team 1 - Adelaide
+Erick Thomas Gaspar (527823)
+Nasir Uddin (558747)
+Mohamad Ilhamy Putra (595179)
+Prapon Chaimuttayompol (575141)
+Chi Wang (523312)
+
+
+*/
 
 public class CouchDB {
 	

@@ -3,6 +3,20 @@ package SimpleCouchDB;
 import java.util.Comparator;
 import java.util.Map;
 
+/**
+
+Sentiment Analysis comparator
+
+Team 1 - Adelaide
+Erick Thomas Gaspar (527823)
+Nasir Uddin (558747)
+Mohamad Ilhamy Putra (595179)
+Prapon Chaimuttayompol (575141)
+Chi Wang (523312)
+
+
+*/
+
 class ValueComparator implements Comparator<String> {
 
     Map<String, UserStat> base;
