@@ -94,7 +94,7 @@ public final class TwitCollectHarkonnen {
 		Document doc = new Document();
 
 		doc.setId(id);
-		doc.put("twit", twit);
+		doc.put("twits", twit);
 
 		return doc;
 

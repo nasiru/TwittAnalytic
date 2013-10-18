@@ -22,7 +22,7 @@ public class extraction {
 	public static void main(String[] args)
 			throws twitter4j.internal.org.json.JSONException {
 
-		createDatabase("localhost", "db_fiveg");
+		createDatabase("localhost", "db_fivegs");
 		Document doc = new Document();
 		JSONObject jObj = new JSONObject();
 
@@ -32,14 +32,15 @@ public class extraction {
 
 			/*** read from file ***/
 			JsonParser jParser = jfactory.createJsonParser(new File(
-					"/Users/ChiWang/Downloads/tweets.json"));
+					args[0]));
 
-			while (jParser.nextToken() != JsonToken.END_OBJECT) {
+			while (jParser.nextToken() != JsonToken.END_ARRAY) {
 
-				// System.out.println("one done \n\n\n\n\n\n");
+				//System.out.println("one done \n\n\n\n\n\n");
 
 				while (jParser.nextToken() != JsonToken.END_OBJECT) {
 
+					//System.out.println("running?");
 					String fieldname = jParser.getCurrentName();
 					if ("_id".equals(fieldname)) {
 
@@ -1809,9 +1810,6 @@ public class extraction {
 								String value = jParser.getText();
 
 								user.put("time_zone", value);
-								// System.out.println(key + ": " + value); //
-								// display
-								// 29
 
 							}
 
@@ -1822,9 +1820,6 @@ public class extraction {
 								String value = jParser.getText();
 
 								user.put("profile_sidebar_border_color", value);
-								// System.out.println(key + ": " + value); //
-								// display
-								// 29
 
 							}
 
@@ -1834,9 +1829,6 @@ public class extraction {
 								jParser.nextToken();
 								String value = jParser.getText();
 								user.put("default_profile", value);
-								// System.out.println(key + ": " + value); //
-								// display
-								// 29
 
 							}
 
@@ -1846,9 +1838,6 @@ public class extraction {
 								jParser.nextToken();
 								String value = jParser.getText();
 								user.put("following", value);
-								// System.out.println(key + ": " + value); //
-								// display
-								// 29
 
 							}
 
@@ -1871,10 +1860,6 @@ public class extraction {
 									jParser.nextToken();
 									String value = jParser.getText();
 									geo.put(key, value);
-
-									// System.out.println(key + ": " + value);
-									// // display
-									// 29
 
 								}
 
@@ -1971,10 +1956,6 @@ public class extraction {
 									jParser.nextToken();
 									String value = jParser.getText();
 
-									// System.out.println(key + ": " + value);
-									// // display
-									// 29
-
 								}
 
 								if ("url".equals(fM)) {
@@ -1982,10 +1963,6 @@ public class extraction {
 									key = "url";
 									jParser.nextToken();
 									String value = jParser.getText();
-
-									// System.out.println(key + ": " + value);
-									// // display
-									// 29
 
 								}
 
@@ -1995,10 +1972,6 @@ public class extraction {
 									jParser.nextToken();
 									String value = jParser.getText();
 
-									// System.out.println(key + ": " + value);
-									// // display
-									// 29
-
 								}
 
 								if ("place_type".equals(fM)) {
@@ -2006,10 +1979,6 @@ public class extraction {
 									key = "place_type";
 									jParser.nextToken();
 									String value = jParser.getText();
-
-									// System.out.println(key + ": " + value);
-									// // display
-									// 29
 
 								}
 
@@ -2027,9 +1996,6 @@ public class extraction {
 									key = "full_name";
 									jParser.nextToken();
 									String value = jParser.getText();
-
-//									System.out.println(key + ": " + value); // display
-																			// 29
 
 								}
 
@@ -2050,23 +2016,25 @@ public class extraction {
 
 				}
 
-				doc.put("twit", jObj.toString());
+				doc.put("twits", jObj.toString());
 
 				//System.out.println(doc.toString());
 				try {
 
+					//System.out.println("called");
 					db.saveDocument(doc);
 
 				} catch (Exception e) {
 					
 					
 					System.err.println(e);
-					System.out.println(doc.toString());
+					//System.out.println(doc.toString());
 					doc.clear();
 					continue;
 
 				}
 				
+				jObj = new JSONObject();
 				doc.clear();
 			}
 			jParser.close();

@@ -94,7 +94,7 @@ public final class TwitCollectOrdos {
 		Document doc = new Document();
 
 		doc.setId(id);
-		doc.put("twit", twit);
+		doc.put("twits", twit);
 
 		return doc;
 
